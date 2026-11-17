@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import { createCreatureRouter } from "./modules/creatures/index.js";
 import { createRaceRouter } from "./modules/races/index.js";
 
 export function createApp(origins, { authenticate } = {}) {
@@ -7,6 +8,7 @@ export function createApp(origins, { authenticate } = {}) {
   app.disable("x-powered-by");
   app.use(cors({ origin: origins }));
   app.use("/api/stories/:storyId/races", createRaceRouter(authenticate));
+  app.use("/api/stories/:storyId/creatures", createCreatureRouter(authenticate));
   app.use(express.json());
 
   app.get("/health", (_req, res) => {
