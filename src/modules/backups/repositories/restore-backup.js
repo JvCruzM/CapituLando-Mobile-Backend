@@ -12,7 +12,7 @@ export async function lockBackupOwner(client, ownerId) {
   return rows[0];
 }
 
-export async function replaceRecords(client, ownerId, groups) {
+export async function clearOwnedRecords(client, ownerId) {
   await client.query(
     "SELECT id FROM stories WHERE profile_id = $1 ORDER BY id FOR UPDATE",
     [ownerId],
@@ -38,7 +38,10 @@ export async function replaceRecords(client, ownerId, groups) {
   await client.query("DELETE FROM goals WHERE profile_id = $1", [ownerId]);
   await client.query("DELETE FROM ideas WHERE profile_id = $1", [ownerId]);
   await client.query("DELETE FROM stories WHERE profile_id = $1", [ownerId]);
+}
 
+export async function replaceRecords(client, ownerId, groups) {
+  await clearOwnedRecords(client, ownerId);
   for (const { table, rows } of groups) {
     if (!rows.length) continue;
     const columns = Object.keys(rows[0]).join(", ");
@@ -50,19 +53,27 @@ export async function replaceRecords(client, ownerId, groups) {
   }
 }
 
+export async function clearWorkspaceSections(
+  client,
+  ownerId,
+  sections = workspaceSections,
+) {
+  if (sections.length === 0) return;
+  const ids = sections.map((section) => `${ownerId}:${section}`);
+  await client.query(
+    "DELETE FROM workspace_sections WHERE id = ANY($1::varchar[])",
+    [ids],
+  );
+}
+
 export async function replaceWorkspace(client, ownerId, workspace, email) {
   const profile = workspace.profile;
   if (profile && Object.hasOwn(profile, "email")) profile.email = email;
 
-  const omittedIds = workspaceSections
-    .filter((section) => !Object.hasOwn(workspace, section))
-    .map((section) => `${ownerId}:${section}`);
-  if (omittedIds.length) {
-    await client.query(
-      "DELETE FROM workspace_sections WHERE id = ANY($1::varchar[])",
-      [omittedIds],
-    );
-  }
+  const omittedSections = workspaceSections.filter(
+    (section) => !Object.hasOwn(workspace, section),
+  );
+  await clearWorkspaceSections(client, ownerId, omittedSections);
 
   for (const [section, value] of Object.entries(workspace)) {
     await client.query(

@@ -1,5 +1,6 @@
 import express, { Router } from "express";
 import { z } from "zod";
+import { clearBackup } from "./controllers/clear-backup.js";
 import { downloadBackup } from "./controllers/export-backup.js";
 import { uploadBackup } from "./controllers/restore-backup.js";
 import { BackupError } from "./schemas/backup-error.js";
@@ -24,6 +25,7 @@ export function createBackupRouter(authenticate) {
   });
   router.get("/", downloadBackup);
   router.post("/", express.json({ limit: "25mb" }), uploadBackup);
+  router.delete("/", clearBackup);
   router.use(handleBackupError);
 
   return router;
@@ -36,18 +38,14 @@ function handleBackupError(error, _req, res, next) {
       .json({ error: { code: error.code, message: error.message } });
   }
   if (error.type === "entity.parse.failed") {
-    return res
-      .status(400)
-      .json({
-        error: { code: "INVALID_JSON", message: "Envie um JSON válido." },
-      });
+    return res.status(400).json({
+      error: { code: "INVALID_JSON", message: "Envie um JSON válido." },
+    });
   }
   if (error.type === "entity.too.large") {
-    return res
-      .status(413)
-      .json({
-        error: { code: "PAYLOAD_TOO_LARGE", message: "O backup excede 25 MB." },
-      });
+    return res.status(413).json({
+      error: { code: "PAYLOAD_TOO_LARGE", message: "O backup excede 25 MB." },
+    });
   }
   next(error);
 }
