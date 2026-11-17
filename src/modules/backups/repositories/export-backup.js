@@ -1,4 +1,8 @@
-import { backupRecords } from "./backup-records.js";
+import {
+  backupRecords,
+  recordReferences,
+  toCamelCase,
+} from "./backup-records.js";
 
 const arraySections = ["goals", "ideas", "concepts", "events"];
 const sections = [...arraySections, "profile", "settings", "writing"];
@@ -29,9 +33,8 @@ export async function readBackup(client, ownerId) {
 }
 
 async function readRecords(client, ownerId, definition) {
-  const { name, table, fields, aliases = {}, references = {} } = definition;
-  const relations =
-    name === "Story" ? references : { story: "story_id", ...references };
+  const { table, fields, aliases = {} } = definition;
+  const relations = recordReferences(definition);
   const columns = [
     "id",
     ...fields,
@@ -96,8 +99,4 @@ function defaultValue(section, profile) {
     quote: "",
     websiteUrl: "",
   };
-}
-
-function toCamelCase(column) {
-  return column.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }

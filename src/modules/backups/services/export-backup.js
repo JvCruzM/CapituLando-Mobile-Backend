@@ -1,21 +1,10 @@
 import { readBackup } from "../repositories/export-backup.js";
+import { backupTransaction } from "./backup-transaction.js";
 
-export async function exportBackup(pool, ownerId) {
-  const client = await pool.connect();
-  let discardConnection = false;
-  try {
-    await client.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
-    const backup = await readBackup(client, ownerId);
-    await client.query("COMMIT");
-    return backup;
-  } catch (error) {
-    try {
-      await client.query("ROLLBACK");
-    } catch {
-      discardConnection = true;
-    }
-    throw error;
-  } finally {
-    client.release(discardConnection);
-  }
+export function exportBackup(pool, ownerId) {
+  return backupTransaction(
+    pool,
+    "BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY",
+    (client) => readBackup(client, ownerId),
+  );
 }

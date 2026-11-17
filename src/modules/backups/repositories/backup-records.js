@@ -1,5 +1,13 @@
 const timestamps = ["created_at", "updated_at"];
 
+export function recordReferences({ name, references }) {
+  return name === "Story" ? references : { story: "story_id", ...references };
+}
+
+export function toCamelCase(column) {
+  return column.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
 export const backupRecords = [
   {
     name: "Story",
