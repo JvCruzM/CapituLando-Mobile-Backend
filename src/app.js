@@ -10,6 +10,7 @@ import { createBackupRouter } from "./modules/backups/index.js";
 import { createCreatureRouter } from "./modules/creatures/index.js";
 import { createItemRouter } from "./modules/items/index.js";
 import { createRaceRouter } from "./modules/races/index.js";
+import { createUniverseRouter } from "./modules/universe/index.js";
 
 export function createApp(
   origins,
@@ -21,6 +22,7 @@ export function createApp(
   app.disable("x-powered-by");
   app.use(helmet());
   app.use(cors({ origin: origins }));
+  app.use("/api/universe", createUniverseRouter(authenticate));
   app.use("/api/stories/:storyId/races", createRaceRouter(authenticate));
   app.use(
     "/api/stories/:storyId/creatures",
