@@ -13,6 +13,7 @@ export const unauthorized = () =>
 
 export function sessionResponse(user, session, refreshToken, config) {
   return {
+    sessionId: session.id,
     accessToken: issueAccessToken(user, session.id, config),
     refreshToken,
     tokenType: "Bearer",

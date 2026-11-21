@@ -164,6 +164,7 @@ test("autenticação HTTP e autorização no esquema compartilhado", async (t) =
       assert.equal(me.role, "AUTHOR");
       await call("/api/auth/me", 401, { method: "GET", access: "invalid" });
       const claims = jwt.decode(session.accessToken);
+      assert.equal(session.sessionId, claims.sid);
       const forged = jwt.sign(
         { ...claims, exp: Math.floor(Date.now() / 1000) - 1 },
         config.JWT_SECRET,
