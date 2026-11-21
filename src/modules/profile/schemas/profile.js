@@ -5,6 +5,21 @@ export const profileSchema = z.strictObject({
   displayName: z.string().trim().min(1).max(100),
   bio: z.string().max(100000).nullable().optional(),
   avatarImage: z.string().max(2000000).nullable().optional(),
+  penName: z.string().max(100000).optional(),
+  quote: z.string().max(100000).optional(),
+  websiteUrl: z
+    .string()
+    .max(100000)
+    .refine((value) => {
+      if (!value) return true;
+      try {
+        return ["http:", "https:"].includes(new URL(value).protocol);
+      } catch {
+        return false;
+      }
+    })
+    .optional(),
+  favoriteGenres: z.array(z.string().max(100)).max(50).optional(),
 });
 
 export const settingsSchema = z.strictObject({

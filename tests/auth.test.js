@@ -344,6 +344,41 @@ test("autenticação HTTP e autorização no esquema compartilhado", async (t) =
           revision: 0,
           value: { themeMode: "dark", reminderTime: "20:00" },
         };
+        await call("/api/profile", 200, {
+          method: "PUT",
+          access: session.accessToken,
+          data: {
+            username: "autora",
+            displayName: "Autora",
+            penName: "Pena de Prata",
+            quote: "Escrever sempre.",
+            websiteUrl: "https://example.test",
+            favoriteGenres: ["Fantasia"],
+          },
+        });
+        const compatible = await call("/api/profile", 200, {
+          method: "PUT",
+          access: session.accessToken,
+          data: { username: "autora", displayName: "Autora" },
+        });
+        assert.equal(compatible.penName, "Pena de Prata");
+        assert.deepEqual(compatible.favoriteGenres, ["Fantasia"]);
+        const {
+          rows: [stored],
+        } = await db.query(
+          "SELECT content FROM workspace_sections WHERE id = $1",
+          [owner + ":profile"],
+        );
+        assert.equal(JSON.parse(stored.content).quote, "Escrever sempre.");
+        await call("/api/profile", 400, {
+          method: "PUT",
+          access: session.accessToken,
+          data: {
+            username: "autora",
+            displayName: "Autora",
+            websiteUrl: "javascript:alert(1)",
+          },
+        });
         assert.equal(
           (
             await call("/api/profile/settings", 200, {
