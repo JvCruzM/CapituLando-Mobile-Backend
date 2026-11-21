@@ -6,7 +6,6 @@ const createLimiter = (windowMs, max, code, message) =>
     max,
     standardHeaders: "draft-8",
     legacyHeaders: false,
-    skip: () => process.env.NODE_ENV === "test",
     handler: (_req, res) => {
       res.status(429).json({
         error: { code, message },
