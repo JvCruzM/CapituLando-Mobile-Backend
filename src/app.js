@@ -11,17 +11,21 @@ import { createCreatureRouter } from "./modules/creatures/index.js";
 import { createItemRouter } from "./modules/items/index.js";
 import { createRaceRouter } from "./modules/races/index.js";
 import { createUniverseRouter } from "./modules/universe/index.js";
+import { createWritingRouter } from "./modules/writing/index.js";
 
 export function createApp(
   origins,
-  { authenticate = authenticateSession, config, mailer } = {},
+  { authenticate = authenticateSession, config, mailer, pool } = {},
 ) {
   const app = express();
   app.locals.config = config;
   app.locals.mailer = mailer;
+  app.locals.pool = pool;
   app.disable("x-powered-by");
   app.use(helmet());
   app.use(cors({ origin: origins }));
+  app.use(express.json());
+
   app.use("/api/universe", createUniverseRouter(authenticate));
   app.use("/api/stories/:storyId/races", createRaceRouter(authenticate));
   app.use(
@@ -29,9 +33,9 @@ export function createApp(
     createCreatureRouter(authenticate),
   );
   app.use("/api/stories/:storyId/items", createItemRouter(authenticate));
+  app.use("/api/writing", createWritingRouter(authenticate));
   app.use("/api/backup", createBackupRouter(authenticate));
   app.use("/api/profile", createProfileRouter());
-  app.use(express.json());
   app.use("/api/auth", createAuthRouter());
   app.use("/api/sessions", createSessionRouter());
 

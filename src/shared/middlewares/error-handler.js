@@ -2,9 +2,13 @@ import { AppError } from "../errors/app-error.js";
 
 export function errorHandler(error, _req, res, _next) {
   if (error instanceof AppError) {
-    return res
-      .status(error.status)
-      .json({ error: { code: error.code, message: error.message } });
+    return res.status(error.status).json({
+      error: {
+        code: error.code,
+        message: error.message,
+        ...(error.details ? { details: error.details } : {}),
+      },
+    });
   }
   if (error.code === "23505") {
     return res.status(409).json({
