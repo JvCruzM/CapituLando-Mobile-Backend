@@ -10,6 +10,7 @@ export const characterSchema = z.object({
     .min(1)
     .refine((value) => value.length <= 100),
   raceId: nullableUuid,
+  organizationId: nullableUuid,
   description: nullableText,
   appearance: nullableText,
   personality: nullableText,

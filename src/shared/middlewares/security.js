@@ -29,17 +29,30 @@ export function validateUuidParam(paramName, code, message) {
   };
 }
 
-export function createJsonBodyParser(limit = "1mb", tooLargeMessage = "Os dados enviados excedem o limite permitido.") {
+export function createJsonBodyParser(
+  limit = "1mb",
+  tooLargeMessage = "Os dados enviados excedem o limite permitido.",
+) {
   const parser = express.json({ limit });
 
   return [
     parser,
     (error, _req, res, next) => {
       if (error?.type === "entity.parse.failed") {
-        return sendSecurityError(res, 400, "INVALID_JSON", "Envie um JSON válido.");
+        return sendSecurityError(
+          res,
+          400,
+          "INVALID_JSON",
+          "Envie um JSON válido.",
+        );
       }
       if (error?.type === "entity.too.large") {
-        return sendSecurityError(res, 413, "PAYLOAD_TOO_LARGE", tooLargeMessage);
+        return sendSecurityError(
+          res,
+          413,
+          "PAYLOAD_TOO_LARGE",
+          tooLargeMessage,
+        );
       }
       return next(error);
     },
@@ -50,6 +63,7 @@ export function createWriteRateLimiter() {
   return rateLimit({
     windowMs: 60 * 1000,
     max: 120,
+    skip: (req) => ["GET", "HEAD", "OPTIONS"].includes(req.method),
     standardHeaders: true,
     legacyHeaders: false,
     handler: (_req, res) => {

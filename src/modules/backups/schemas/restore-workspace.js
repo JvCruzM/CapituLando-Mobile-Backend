@@ -11,7 +11,7 @@ const requiredText = (max) =>
 const projectId = z.guid();
 const id = requiredText(100);
 
-const sections = {
+export const workspaceValueSchemas = {
   goals: z
     .array(
       z.looseObject({
@@ -95,6 +95,7 @@ const sections = {
   }),
 };
 
+const sections = workspaceValueSchemas;
 export const workspaceSections = Object.keys(sections);
 const workspaceSchema = z.strictObject(
   Object.fromEntries(
@@ -124,9 +125,11 @@ export function prepareWorkspace(input, ids) {
       remapStory(value, ids);
       if (value.chapterId) {
         const chapter = findReference(ids, "Chapter", value.chapterId);
-        if (chapter && chapter.storyId === oldStoryId)
+        if (chapter && chapter.storyId === oldStoryId) {
           value.chapterId = chapter.id;
-        else delete value.chapterId;
+          value.chapterRevision = 0;
+          value.chapterVersion = 0;
+        } else delete value.chapterId;
       }
       if (typeof value.content === "string")
         value.content = cleanChapterHtml(value.content);

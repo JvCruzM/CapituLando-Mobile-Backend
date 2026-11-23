@@ -5,7 +5,7 @@ const worldRuleColumns = `
 `;
 
 function worldRuleValues({ title, category, description }) {
-  return [title, category ?? null, description ?? null];
+  return [title, category ?? "Geral", description ?? ""];
 }
 
 export function createWorldRuleRepository(db) {

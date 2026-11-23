@@ -23,6 +23,9 @@ import { createOrganizationRouter } from "./modules/organizations/index.js";
 import { createWorldRuleRouter } from "./modules/world-rules/index.js";
 import { createEventRouter } from "./modules/events/index.js";
 import { createEventCharacterRouter } from "./modules/event-characters/index.js";
+import { createWritingRouter } from "./modules/writing/index.js";
+import { createStoryRouter } from "./modules/stories/index.js";
+import { createWorkspaceRouter } from "./modules/workspace/index.js";
 
 export function createApp(
   origins,
@@ -44,8 +47,10 @@ export function createApp(
     createCreatureRouter(authenticate),
   );
   app.use("/api/stories/:storyId/items", createItemRouter(authenticate));
+  app.use("/api/writing", createWritingRouter(authenticate));
+  app.use("/api/stories", createStoryRouter(authenticate));
+  app.use("/api/workspace", createWorkspaceRouter(authenticate));
 
-  // Rotas do módulo Márcio
   app.use(
     "/api/stories/:storyId/characters",
     createCharacterRouter(authenticate),

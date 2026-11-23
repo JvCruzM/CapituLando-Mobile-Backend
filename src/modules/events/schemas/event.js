@@ -4,6 +4,11 @@ const nullableText = z.string().nullable().optional();
 const nullableUuid = z.string().uuid().nullable().optional();
 
 export const eventSchema = z.object({
+  characterIds: z
+    .array(z.guid())
+    .max(1000)
+    .refine((ids) => new Set(ids).size === ids.length)
+    .optional(),
   title: z
     .string()
     .trim()

@@ -1,3 +1,5 @@
+import { transaction } from "../../../database/transaction.js";
+import { AppError } from "../../../shared/errors/app-error.js";
 import { createCharacterRepository } from "../repositories/characters.js";
 import { sendSecurityError } from "../../../shared/middlewares/security.js";
 
@@ -35,58 +37,8 @@ export function createCharacterController() {
       res.json(character);
     },
 
-    async create(req, res) {
-      const { storyId } = req.params;
-      const profileId = res.locals.principal.id;
-      const repository = createCharacterRepository(req.app.locals.db);
-
-      if (!(await repository.storyExists(storyId, profileId))) {
-        return storyNotFound(res);
-      }
-
-      const raceId = res.locals.characterInput.raceId;
-      if (raceId && !(await repository.raceBelongsToStory(storyId, raceId))) {
-        return sendSecurityError(
-          res,
-          400,
-          "INVALID_RACE",
-          "A raça informada não pertence a esta história.",
-        );
-      }
-
-      const character = await repository.create(
-        storyId,
-        profileId,
-        res.locals.characterInput,
-      );
-      if (!character) return storyNotFound(res);
-      res.status(201).json(character);
-    },
-
-    async update(req, res) {
-      const { storyId, characterId } = req.params;
-      const profileId = res.locals.principal.id;
-      const repository = createCharacterRepository(req.app.locals.db);
-
-      const raceId = res.locals.characterInput.raceId;
-      if (raceId && !(await repository.raceBelongsToStory(storyId, raceId))) {
-        return sendSecurityError(
-          res,
-          400,
-          "INVALID_RACE",
-          "A raça informada não pertence a esta história.",
-        );
-      }
-
-      const character = await repository.update(
-        storyId,
-        profileId,
-        characterId,
-        res.locals.characterInput,
-      );
-      if (!character) return characterNotFound(res);
-      res.json(character);
-    },
+    create: saveCharacter(false),
+    update: saveCharacter(true),
 
     async remove(req, res) {
       const { storyId, characterId } = req.params;
@@ -109,5 +61,56 @@ export function createCharacterController() {
         );
       }
     },
+  };
+}
+
+function saveCharacter(update) {
+  return async (req, res) => {
+    const owner = res.locals.principal.id,
+      story = req.params.storyId,
+      input = res.locals.characterInput;
+    const saved = await transaction(req.app.locals.db, async (db) => {
+      await db.query("SELECT id FROM users WHERE id=$1 FOR UPDATE", [owner]);
+      const repository = createCharacterRepository(db);
+      if (!(await repository.storyExists(story, owner)))
+        throw new AppError(404, "STORY_NOT_FOUND", "História não encontrada.");
+      if (
+        input.raceId &&
+        !(await repository.raceBelongsToStory(story, input.raceId))
+      )
+        throw new AppError(
+          400,
+          "INVALID_RACE",
+          "Selecione uma raça da história.",
+        );
+      if (input.organizationId) {
+        const { rows } = await db.query(
+          "SELECT id FROM organizations WHERE id=$1 AND story_id=$2",
+          [input.organizationId, story],
+        );
+        if (!rows.length)
+          throw new AppError(
+            400,
+            "INVALID_ORGANIZATION",
+            "Selecione uma organização da história.",
+          );
+      }
+      const character = update
+        ? await repository.update(story, owner, req.params.characterId, input)
+        : await repository.create(story, owner, input);
+      if (!character)
+        throw new AppError(
+          404,
+          "CHARACTER_NOT_FOUND",
+          "Personagem não encontrado.",
+        );
+      if (input.organizationId)
+        await db.query(
+          "INSERT INTO character_organizations(story_id,character_id,organization_id,is_active) VALUES($1,$2,$3,true) ON CONFLICT(character_id,organization_id) DO UPDATE SET is_active=true,updated_at=now()",
+          [story, character.id, input.organizationId],
+        );
+      return character;
+    });
+    res.status(update ? 200 : 201).json(saved);
   };
 }

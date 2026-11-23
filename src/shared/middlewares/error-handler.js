@@ -18,6 +18,14 @@ export function errorHandler(error, _req, res, _next) {
       },
     });
   }
+  if (error.code === "23503") {
+    return res.status(409).json({
+      error: {
+        code: "REFERENCE_CONFLICT",
+        message: "Remova os vínculos deste registro antes de excluí-lo.",
+      },
+    });
+  }
   if (error.type === "entity.parse.failed") {
     return res.status(400).json({
       error: { code: "INVALID_JSON", message: "Envie um JSON válido." },

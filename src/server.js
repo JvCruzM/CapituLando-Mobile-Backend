@@ -1,7 +1,6 @@
 import { createApp } from "./app.js";
 import { readEnvironment } from "./config/env.js";
 import { createPool } from "./database/pool.js";
-import { ensureWritingSchema } from "./database/ensureWritingSchema.js";
 import { createMailer } from "./modules/mail/services/mail-sevice.js";
 import { hashPassword } from "./shared/utils/crypto.js";
 import { randomBytes } from "node:crypto";
@@ -10,7 +9,6 @@ const env = readEnvironment(process.env);
 env.dummyPasswordHash = await hashPassword(randomBytes(32).toString("hex"));
 
 const pool = createPool(env.DATABASE_URL);
-await ensureWritingSchema(pool);
 
 const app = createApp(env.CORS_ORIGINS, {
   config: env,
