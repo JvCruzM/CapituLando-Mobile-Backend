@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { readFile } from "node:fs/promises";
 import { once } from "node:events";
 import { PGlite } from "@electric-sql/pglite";
-import { createApp } from "../src/app.js";
+import { createApp } from "../src/create-app.js";
 
 test("fluxos mobile usam o esquema compartilhado e isolam contas", async (t) => {
   const db = new PGlite();
