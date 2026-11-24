@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import sanitizeHtml from "sanitize-html";
+import sanitizeHtml from "../../../../.generated/sanitize-html.cjs";
 import { z } from "zod";
 import {
   backupRecords,
