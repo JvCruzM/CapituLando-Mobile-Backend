@@ -22,15 +22,19 @@ const inputSchema = z.object({
   expectedVersion: z.number().int().nonnegative().optional(),
   forceOverwrite: z.boolean().default(false),
 });
+
 const fail = (status, code, message, details) => {
   throw new AppError(status, code, message, details);
 };
+
 const parse = (schema, value) => {
   const result = schema.safeParse(value);
-  if (!result.success)
+  if (!result.success) {
     fail(400, "VALIDATION_ERROR", "Confira os dados enviados.");
+  }
   return result.data;
 };
+
 const item = (row) => ({
   ...row,
   storyId: row.story_id,
@@ -39,21 +43,27 @@ const item = (row) => ({
   kind: row.status === "DRAFT" ? "draft" : "chapter",
   version: Number(row.revision),
 });
+
 const split = (rows) => ({
   chapters: rows.filter((r) => r.status !== "DRAFT").map(item),
   drafts: rows.filter((r) => r.status === "DRAFT").map(item),
 });
+
 async function ownedStory(db, owner, story, lock = false) {
   parse(uuid, story);
   const { rows } = await db.query(
     `SELECT id FROM stories WHERE id=$1 AND profile_id=$2${lock ? " FOR UPDATE" : ""}`,
     [story, owner],
   );
-  if (!rows.length) fail(404, "STORY_NOT_FOUND", "História não encontrada.");
+  if (!rows.length) {
+    fail(404, "STORY_NOT_FOUND", "História não encontrada.");
+  }
 }
+
 async function lockOwner(db, owner) {
   await db.query("SELECT id FROM users WHERE id=$1 FOR UPDATE", [owner]);
 }
+
 const recovery = (row) => {
   const value = row ? JSON.parse(row.content) : {};
   return {
@@ -71,6 +81,7 @@ export function createWritingRouter(authenticate) {
     requireValidPrincipal,
     ...createJsonBodyParser("3mb"),
   );
+
   router.get("/projects", async (req, res) => {
     const { rows } = await req.app.locals.db.query(
       "SELECT id, title, genre FROM stories WHERE profile_id=$1 ORDER BY title,id",
@@ -78,6 +89,7 @@ export function createWritingRouter(authenticate) {
     );
     res.json({ projects: rows });
   });
+
   router.get("/stories/:storyId/items", async (req, res) => {
     const db = req.app.locals.db;
     await ownedStory(db, res.locals.principal.id, req.params.storyId);
@@ -87,6 +99,21 @@ export function createWritingRouter(authenticate) {
     );
     res.json(split(rows));
   });
+
+  router.get("/stories/:storyId/items/:itemId", async (req, res) => {
+    const db = req.app.locals.db;
+    await ownedStory(db, res.locals.principal.id, req.params.storyId);
+    parse(uuid, req.params.itemId);
+    const { rows } = await db.query(
+      "SELECT * FROM chapters WHERE id=$1 AND story_id=$2",
+      [req.params.itemId, req.params.storyId],
+    );
+    if (!rows.length) {
+      fail(404, "ITEM_NOT_FOUND", "Capítulo não encontrado.");
+    }
+    res.json(item(rows[0]));
+  });
+
   const save = (update) => async (req, res) => {
     const data = parse(inputSchema, req.body);
     const owner = res.locals.principal.id;
@@ -101,17 +128,20 @@ export function createWritingRouter(authenticate) {
           [req.params.itemId, req.params.storyId],
         );
         current = rows[0];
-        if (!current) fail(404, "ITEM_NOT_FOUND", "Capítulo não encontrado.");
+        if (!current) {
+          fail(404, "ITEM_NOT_FOUND", "Capítulo não encontrado.");
+        }
         if (
           !data.forceOverwrite &&
           data.expectedVersion !== Number(current.revision)
-        )
+        ) {
           fail(
             409,
             "VERSION_CONFLICT",
             "O texto foi alterado em outra sessão.",
             { serverItem: item(current) },
           );
+        }
       }
       const content = cleanChapterHtml(data.content);
       const count = content
@@ -139,8 +169,10 @@ export function createWritingRouter(authenticate) {
     });
     res.status(update ? 200 : 201).json(saved);
   };
+
   router.post("/stories/:storyId/items", save(false));
   router.put("/stories/:storyId/items/:itemId", save(true));
+
   router.delete("/stories/:storyId/items/:itemId", async (req, res) => {
     await transaction(req.app.locals.db, async (db) => {
       await lockOwner(db, res.locals.principal.id);
@@ -154,14 +186,16 @@ export function createWritingRouter(authenticate) {
         "DELETE FROM chapters WHERE id=$1 AND story_id=$2",
         [req.params.itemId, req.params.storyId],
       );
-      if (!rowCount) fail(404, "ITEM_NOT_FOUND", "Capítulo não encontrado.");
-      const key = res.locals.principal.id + ":writing";
+      if (!rowCount) {
+        fail(404, "ITEM_NOT_FOUND", "Capítulo não encontrado.");
+      }
+      const key = `${res.locals.principal.id}:writing`;
       const { rows } = await db.query(
         "SELECT content FROM workspace_sections WHERE id=$1",
         [key],
       );
       const state = rows[0] ? JSON.parse(rows[0].content) : null;
-      if (state?.chapterId === req.params.itemId)
+      if (state?.chapterId === req.params.itemId) {
         await db.query(
           "UPDATE workspace_sections SET content=$1,revision=revision+1 WHERE id=$2",
           [
@@ -176,9 +210,11 @@ export function createWritingRouter(authenticate) {
             key,
           ],
         );
+      }
     });
     res.status(204).end();
   });
+
   router.get("/workspace", async (req, res) => {
     await ownedStory(
       req.app.locals.db,
@@ -196,6 +232,7 @@ export function createWritingRouter(authenticate) {
         : { content: "", version: state.version },
     );
   });
+
   router.put("/workspace", async (req, res) => {
     const data = parse(
       z.object({
@@ -225,8 +262,9 @@ export function createWritingRouter(authenticate) {
           "SELECT id FROM chapters WHERE id=$1 AND story_id=$2",
           [data.chapterId, data.projectId],
         );
-        if (!rows.length)
+        if (!rows.length) {
           fail(400, "INVALID_CHAPTER", "O capítulo não pertence à história.");
+        }
       }
       const key = `${owner}:writing`;
       const { rows } = await db.query(
@@ -234,10 +272,11 @@ export function createWritingRouter(authenticate) {
         [key],
       );
       const current = recovery(rows[0]);
-      if (data.expectedVersion !== current.version)
+      if (data.expectedVersion !== current.version) {
         fail(409, "SESSION_CONFLICT", "A escrita mudou em outra sessão.", {
           serverState: current,
         });
+      }
       const value = data.clear
         ? {}
         : {
@@ -262,5 +301,6 @@ export function createWritingRouter(authenticate) {
     });
     res.json(saved);
   });
+
   return router;
 }
