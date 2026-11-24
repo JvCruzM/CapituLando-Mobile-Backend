@@ -95,6 +95,18 @@ function saveCharacter(update) {
             "Selecione uma organização da história.",
           );
       }
+      if (input.organizationIds?.length) {
+        const { rows } = await db.query(
+          "SELECT id FROM organizations WHERE story_id=$1 AND id=ANY($2::uuid[])",
+          [story, input.organizationIds],
+        );
+        if (rows.length !== input.organizationIds.length)
+          throw new AppError(
+            400,
+            "INVALID_ORGANIZATION",
+            "Selecione organizações desta história.",
+          );
+      }
       const character = update
         ? await repository.update(story, owner, req.params.characterId, input)
         : await repository.create(story, owner, input);
@@ -109,6 +121,17 @@ function saveCharacter(update) {
           "INSERT INTO character_organizations(story_id,character_id,organization_id,is_active) VALUES($1,$2,$3,true) ON CONFLICT(character_id,organization_id) DO UPDATE SET is_active=true,updated_at=now()",
           [story, character.id, input.organizationId],
         );
+      if (input.organizationIds) {
+        await db.query(
+          "UPDATE character_organizations SET is_active=false,updated_at=now() WHERE story_id=$1 AND character_id=$2 AND is_active AND NOT(organization_id=ANY($3::uuid[]))",
+          [story, character.id, input.organizationIds],
+        );
+        for (const org of input.organizationIds)
+          await db.query(
+            "INSERT INTO character_organizations(story_id,character_id,organization_id,is_active) VALUES($1,$2,$3,true) ON CONFLICT(character_id,organization_id) DO UPDATE SET is_active=true,updated_at=now()",
+            [story, character.id, org],
+          );
+      }
       return character;
     });
     res.status(update ? 200 : 201).json(saved);

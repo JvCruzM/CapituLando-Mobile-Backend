@@ -13,6 +13,12 @@ const inputSchema = z.object({
   title: z.string().trim().min(1).max(200),
   content: z.string().max(2000000),
   kind: z.enum(["chapter", "draft"]),
+  status: z
+    .preprocess(
+      (v) => (typeof v === "string" ? v.toUpperCase() : v),
+      z.enum(["DRAFT", "IN_REVIEW", "PUBLISHED", "ARCHIVED"]),
+    )
+    .optional(),
   expectedVersion: z.number().int().nonnegative().optional(),
   forceOverwrite: z.boolean().default(false),
 });
@@ -114,11 +120,12 @@ export function createWritingRouter(authenticate) {
         .split(/\s+/)
         .filter(Boolean).length;
       const status =
-        data.kind === "draft"
+        data.status ??
+        (data.kind === "draft"
           ? "DRAFT"
           : current && current.status !== "DRAFT"
             ? current.status
-            : "IN_REVIEW";
+            : "IN_REVIEW");
       const { rows } = update
         ? await db.query(
             "UPDATE chapters SET title=$1,content=$2,word_count=$3,status=$4,revision=revision+1,updated_at=now() WHERE id=$5 RETURNING *",
@@ -195,6 +202,12 @@ export function createWritingRouter(authenticate) {
         projectId: uuid,
         chapterId: uuid.nullish(),
         kind: z.enum(["chapter", "draft"]),
+        status: z
+          .preprocess(
+            (v) => (typeof v === "string" ? v.toUpperCase() : v),
+            z.enum(["DRAFT", "IN_REVIEW", "PUBLISHED", "ARCHIVED"]),
+          )
+          .optional(),
         title: z.string().max(200),
         content: z.string().max(2000000),
         expectedVersion: z.number().int().nonnegative(),
@@ -232,6 +245,8 @@ export function createWritingRouter(authenticate) {
             chapterId: data.chapterId ?? null,
             kind: data.kind,
             type: data.kind,
+            status:
+              data.status ?? (data.kind === "draft" ? "DRAFT" : "IN_REVIEW"),
             title: data.title,
             content: cleanChapterHtml(data.content),
             chapterVersion: data.chapterVersion ?? 0,

@@ -4,6 +4,7 @@ import { AppError } from "../../shared/errors/app-error.js";
 import { transaction } from "../../database/transaction.js";
 
 const tables = [
+  "chapters",
   "races",
   "creatures",
   "items",

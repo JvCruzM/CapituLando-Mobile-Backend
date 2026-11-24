@@ -8,8 +8,8 @@ export const locationSchema = z.object({
     .string()
     .trim()
     .min(1)
-    .refine((value) => value.length <= 100),
-  type: z.string().trim().max(50).nullable().optional(),
+    .refine((value) => value.length <= 150),
+  type: z.string().trim().max(80).nullable().optional(),
   description: nullableText,
   climate: z.string().trim().max(100).nullable().optional(),
   region: z.string().trim().max(100).nullable().optional(),

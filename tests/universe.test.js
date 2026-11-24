@@ -11,6 +11,7 @@ test("enciclopédia consulta somente histórias e registros do proprietário", a
     await readFile(new URL("./auth-schema.sql", import.meta.url), "utf8"),
   );
   for (const table of [
+    "chapters",
     "creatures",
     "items",
     "locations",

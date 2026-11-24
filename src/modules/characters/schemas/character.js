@@ -11,6 +11,11 @@ export const characterSchema = z.object({
     .refine((value) => value.length <= 100),
   raceId: nullableUuid,
   organizationId: nullableUuid,
+  organizationIds: z
+    .array(z.guid())
+    .max(1000)
+    .refine((ids) => new Set(ids).size === ids.length)
+    .optional(),
   description: nullableText,
   appearance: nullableText,
   personality: nullableText,

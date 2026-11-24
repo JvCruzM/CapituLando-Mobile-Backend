@@ -377,6 +377,154 @@ test("fluxos mobile usam o esquema compartilhado e isolam contas", async (t) => 
       );
     },
   );
+
+  await t.test(
+    "status da escrita persistem no esquema web e capítulos aparecem no universo",
+    async () => {
+      const url = "/api/writing/stories/" + story.id + "/items";
+      let item = await call(url, 201, "POST", {
+        title: "Status",
+        content: "<p><b>Formatado</b></p>",
+        kind: "draft",
+        status: "draft",
+      });
+      for (const status of ["IN_REVIEW", "PUBLISHED", "ARCHIVED", "DRAFT"]) {
+        item = await call(url + "/" + item.id, 200, "PUT", {
+          title: item.title,
+          content: item.content,
+          kind: status === "DRAFT" ? "draft" : "chapter",
+          status,
+          expectedVersion: item.version,
+        });
+        assert.equal(item.status, status);
+        assert.equal(item.kind, status === "DRAFT" ? "draft" : "chapter");
+      }
+      await call(url + "/" + item.id, 400, "PUT", {
+        title: "Inválido",
+        content: "x",
+        kind: "chapter",
+        status: "invalid",
+        expectedVersion: item.version,
+      });
+      const universe = await call("/api/universe/stories/" + story.id);
+      assert(universe.chapters.some((c) => c.id === item.id));
+    },
+  );
+  await t.test(
+    "organizações do personagem são atômicas e mantêm metadados de vínculos",
+    async () => {
+      const prefix = "/api/stories/" + story.id;
+      const a = await call(prefix + "/organizations", 201, "POST", {
+        name: "A".repeat(150),
+        type: "T".repeat(100),
+      });
+      const b = await call(prefix + "/organizations", 201, "POST", {
+        name: "Segunda",
+      });
+      const local = await call(prefix + "/locations", 201, "POST", {
+        name: "L".repeat(150),
+        type: "T".repeat(80),
+      });
+      let person = await call(prefix + "/characters", 201, "POST", {
+        name: "Preservado",
+        description: "Descrição web",
+        gender: "Outro",
+        birthDate: "2000-01-01",
+        notes: "Notas web",
+        organizationIds: [a.id, b.id],
+      });
+      await pool.query(
+        "UPDATE character_organizations SET role='Líder',joined_at='2020-01-01' WHERE character_id=$1 AND organization_id=$2",
+        [person.id, a.id],
+      );
+      person = await call(prefix + "/characters/" + person.id, 200, "PUT", {
+        ...person,
+        name: "Editado",
+        organizationIds: [a.id],
+      });
+      assert.equal(person.notes, "Notas web");
+      assert.equal(person.gender, "Outro");
+      assert.equal(person.description, "Descrição web");
+      let links = await call(prefix + "/character-organizations");
+      const active = links.find(
+        (l) => l.characterId === person.id && l.organizationId === a.id,
+      );
+      assert.equal(active.role, "Líder");
+      assert.equal(active.isActive, true);
+      const inactive = links.find(
+        (l) => l.characterId === person.id && l.organizationId === b.id,
+      );
+      assert.equal(inactive.isActive, false);
+      await call(prefix + "/characters/" + person.id, 400, "PUT", {
+        ...person,
+        name: "Não salvar",
+        organizationIds: [a.id, foreign.id],
+      });
+      assert.equal(
+        (await call(prefix + "/characters/" + person.id)).name,
+        "Editado",
+      );
+      await call(prefix + "/characters/" + person.id, 200, "PUT", {
+        ...person,
+        organizationIds: [a.id, b.id],
+      });
+      links = await call(prefix + "/character-organizations");
+      assert.equal(links.find((l) => l.id === inactive.id).isActive, true);
+      assert.equal(links.find((l) => l.id === active.id).role, "Líder");
+    },
+  );
+
+  await t.test(
+    "enciclopédia cria e edita imagens e conceitos pelo contrato compartilhado",
+    async () => {
+      const prefix = "/api/stories/" + story.id;
+      for (const [endpoint, imageField] of [
+        ["races", "raceImage"],
+        ["creatures", "creatureImage"],
+        ["items", "itemImage"],
+      ]) {
+        const input = {
+          name: "Entrada de teste",
+          description: "Descrição",
+          [imageField]: "https://example.test/image.jpg",
+        };
+        const created = await call(prefix + "/" + endpoint, 201, "POST", input);
+        const updated = await call(
+          prefix + "/" + endpoint + "/" + created.id,
+          200,
+          "PUT",
+          { ...input, name: "Revisada" },
+        );
+        assert.equal(updated.name, "Revisada");
+        await call(prefix + "/" + endpoint + "/" + created.id, 204, "DELETE");
+      }
+      const doc = await call("/api/workspace/concepts");
+      const concept = {
+        id: "mobile-concept",
+        projectId: story.id,
+        title: "Origem",
+        category: "Lore / História",
+        description: "História do mundo",
+        notes: "Nota",
+        imageUrl: "https://example.test/concept.jpg",
+      };
+      const saved = await call("/api/workspace/concepts", 200, "PUT", {
+        revision: doc.revision,
+        value: [...doc.value, concept],
+      });
+      const universe = await call("/api/universe/stories/" + story.id);
+      assert.equal(
+        universe.concepts.find((c) => c.id === concept.id).imageUrl,
+        concept.imageUrl,
+      );
+      await call("/api/workspace/concepts", 409, "PUT", {
+        revision: doc.revision,
+        value: [],
+      });
+      const latest = await call("/api/workspace/concepts");
+      assert(latest.value.some((c) => c.id === concept.id));
+    },
+  );
   await t.test(
     "backup inclui escrita pendente, metas e ideias, aceita mais de 100 KB e restaura",
     async () => {
