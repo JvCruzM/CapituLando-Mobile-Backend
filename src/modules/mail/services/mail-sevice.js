@@ -21,6 +21,7 @@ export function createMailer(config) {
         config.FRONTEND_URL,
       );
       url.searchParams.set("token", token);
+      url.searchParams.set("source", "mobile");
       try {
         await smtp.sendMail({
           from: config.MAIL_FROM,

@@ -72,6 +72,8 @@ test("SMTP envia links compatíveis com as páginas do web", async () => {
       plain[1],
       /https:\/\/web\.example\.test\/redefinir-senha\?token=token-de-reset/,
     );
+    assert.match(plain[0], /source=mobile/);
+    assert.match(plain[1], /source=mobile/);
     assert.match(plain[0], /To: autora@example.test/);
   } finally {
     for (const socket of sockets) socket.destroy();
