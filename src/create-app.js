@@ -1,4 +1,4 @@
-import cors from "cors";
+﻿import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import { createAuthRouter } from "./modules/auth/index.js";
@@ -26,6 +26,7 @@ import { createEventCharacterRouter } from "./modules/event-characters/index.js"
 import { createWritingRouter } from "./modules/writing/index.js";
 import { createStoryRouter } from "./modules/stories/index.js";
 import { createWorkspaceRouter } from "./modules/workspace/index.js";
+import { createDashboardRouter } from "./modules/dashboard/index.js";
 
 export function createApp(
   origins,
@@ -50,6 +51,7 @@ export function createApp(
   app.use("/api/writing", createWritingRouter(authenticate));
   app.use("/api/stories", createStoryRouter(authenticate));
   app.use("/api/workspace", createWorkspaceRouter(authenticate));
+  app.use("/api/dashboard", createDashboardRouter(authenticate));
 
   app.use(
     "/api/stories/:storyId/characters",
@@ -94,8 +96,9 @@ export function createApp(
   app.use((_req, res) =>
     res
       .status(404)
-      .json({ error: { code: "NOT_FOUND", message: "Rota não encontrada." } }),
+      .json({ error: { code: "NOT_FOUND", message: "Rota nÃ£o encontrada." } }),
   );
   app.use(errorHandler);
   return app;
 }
+
