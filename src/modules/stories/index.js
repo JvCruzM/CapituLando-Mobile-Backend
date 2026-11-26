@@ -16,7 +16,7 @@ const schema = z.object({
   coverImage: z.string().max(2000000).nullish(),
   status: z.enum(["DRAFT", "IN_PROGRESS", "COMPLETED"]).default("DRAFT"),
 });
-const columns = `s.id,s.title,s.genre,s.description,s.synopsis,s.status,s.cover_image AS "coverImage",s.progress_percentage AS "progressPercentage",s.updated_at AS "updatedAt"`;
+const columns = `s.id,s.title,s.genre,s.description,s.synopsis,s.status,s.cover_image AS "coverImage",CASE WHEN s.status = 'COMPLETED' THEN 100 ELSE (SELECT COALESCE(ROUND(100.0 * COUNT(*) FILTER (WHERE c.status = 'PUBLISHED') / NULLIF(COUNT(*), 0)), 0)::int FROM chapters c WHERE c.story_id = s.id) END AS "progressPercentage",s.updated_at AS "updatedAt"`;
 export function createStoryRouter(authenticate) {
   const router = Router();
   router.use(
