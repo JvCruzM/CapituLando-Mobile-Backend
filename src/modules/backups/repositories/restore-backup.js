@@ -1,5 +1,10 @@
 import { workspaceSections } from "../schemas/restore-workspace.js";
 import { BackupError } from "../schemas/backup-error.js";
+import {
+  isCollection,
+  readCollection,
+  writeCollection,
+} from "../../workspace/collections.js";
 
 export async function lockBackupOwner(client, ownerId) {
   const { rows } = await client.query(
@@ -38,6 +43,12 @@ export async function clearOwnedRecords(client, ownerId) {
   await client.query("DELETE FROM goals WHERE profile_id = $1", [ownerId]);
   await client.query("DELETE FROM ideas WHERE profile_id = $1", [ownerId]);
   await client.query("DELETE FROM stories WHERE profile_id = $1", [ownerId]);
+  for (const section of ["ideas", "goals"])
+    await client.query(
+      `INSERT INTO collection_revisions(id,profile_id,section,revision)
+      VALUES($1,$2,$3,1) ON CONFLICT(id) DO UPDATE SET revision=collection_revisions.revision+1`,
+      [`${ownerId}:${section}`, ownerId, section],
+    );
 }
 
 export async function replaceRecords(client, ownerId, groups) {
@@ -76,6 +87,16 @@ export async function replaceWorkspace(client, ownerId, workspace, email) {
   await clearWorkspaceSections(client, ownerId, omittedSections);
 
   for (const [section, value] of Object.entries(workspace)) {
+    if (isCollection(section)) {
+      const current = await readCollection(client, ownerId, section);
+      const merged = new Map(current.value.map((item) => [item.id, item]));
+      for (const item of value) merged.set(item.id, item);
+      await writeCollection(client, ownerId, section, {
+        revision: current.revision,
+        value: [...merged.values()],
+      });
+      continue;
+    }
     await client.query(
       `INSERT INTO workspace_sections (id, content, revision) VALUES ($1, $2, 1)
        ON CONFLICT (id) DO UPDATE

@@ -1,15 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { readFile } from "node:fs/promises";
+import { installProjectSchema } from "./schema.js";
 import { once } from "node:events";
 import { PGlite } from "@electric-sql/pglite";
 import { createApp } from "../src/create-app.js";
 
 test("painel e coleções compartilham dados e mantêm isolamento entre contas", async (t) => {
   const db = new PGlite();
-  await db.exec(
-    await readFile(new URL("./project-schema.sql", import.meta.url), "utf8"),
-  );
+  await installProjectSchema(db);
   const owners = [];
   for (const name of ["author", "other", "empty"]) {
     const { rows } = await db.query(
@@ -176,12 +174,22 @@ test("painel e coleções compartilham dados e mantêm isolamento entre contas",
   await t.test(
     "categorias e sugestões persistem e a API rejeita o vínculo com livro alheio",
     async () => {
-      assert.deepEqual((await call("/api/workspace/ideas")).value, ideas);
+      assert.deepEqual(
+        (await call("/api/workspace/ideas")).value.map(
+          ({ createdAt, ...item }) => item,
+        ),
+        ideas.map(({ createdAt, ...item }) => item),
+      );
       await call("/api/workspace/ideas", 400, "PUT", {
         revision: 1,
         value: [{ ...ideas[0], projectId: foreign.id }],
       });
-      assert.deepEqual((await call("/api/workspace/ideas")).value, ideas);
+      assert.deepEqual(
+        (await call("/api/workspace/ideas")).value.map(
+          ({ createdAt, ...item }) => item,
+        ),
+        ideas.map(({ createdAt, ...item }) => item),
+      );
       const updated = ideas.map((item) =>
         item.id === "i2" ? { ...item, category: "Regras" } : item,
       );
@@ -189,10 +197,21 @@ test("painel e coleções compartilham dados e mantêm isolamento entre contas",
         revision: 1,
         value: updated,
       });
-      assert.deepEqual((await call("/api/workspace/ideas")).value, updated);
+      assert.deepEqual(
+        (await call("/api/workspace/ideas")).value.map(
+          ({ createdAt, ...item }) => item,
+        ),
+        updated.map(({ createdAt, ...item }) => item),
+      );
       const backup = await call("/api/backup");
-      assert.equal(backup.workspace.ideas.value[0].category, "Mundo");
-      assert.equal(backup.workspace.ideas.value[1].category, "Regras");
+      assert.equal(
+        backup.records.Idea.find((item) => item.clientId === "i1").category,
+        "Mundo",
+      );
+      assert.equal(
+        backup.records.Idea.find((item) => item.clientId === "i2").category,
+        "Regras",
+      );
     },
   );
   await t.test(
@@ -256,6 +275,42 @@ test("painel e coleções compartilham dados e mantêm isolamento entre contas",
         status: "IN_PROGRESS",
       });
       assert.equal(reopened.progressPercentage, 50);
+    },
+  );
+  await t.test(
+    "exclusão direta de histórias não mantém ideias e metas órfãs na API, painel ou backup",
+    async () => {
+      await db.query("DELETE FROM stories WHERE id=$1", [first.id]);
+      const ideaDocument = await call("/api/workspace/ideas");
+      const goalDocument = await call("/api/workspace/goals");
+      assert.deepEqual(
+        ideaDocument.value.map((idea) => idea.id),
+        ["i2"],
+      );
+      assert.deepEqual(
+        goalDocument.value.map((goal) => goal.id),
+        ["g1"],
+      );
+      const dashboard = await call("/api/dashboard");
+      assert.equal(dashboard.ideaCount, 1);
+      assert.equal(dashboard.goals.total, 1);
+      const backup = await call("/api/backup");
+      assert.equal(backup.records.Idea.length, ideaDocument.value.length);
+      assert.equal(backup.workspace.ideas, undefined);
+      assert.equal(backup.records.Goal.length, goalDocument.value.length);
+      assert.equal(backup.workspace.goals, undefined);
+      // A exclusão usa a lista atual e não reenvia os vínculos já inválidos.
+      const saved = await call("/api/workspace/ideas", 200, "PUT", {
+        revision: ideaDocument.revision,
+        value: ideaDocument.value.filter((idea) => idea.id !== "i2"),
+      });
+      assert.deepEqual(saved.value, []);
+      assert.equal((await call("/api/dashboard")).ideaCount, 0);
+      assert.equal(
+        (await call("/api/workspace/ideas", 200, "GET", undefined, owners[1]))
+          .value.length,
+        0,
+      );
     },
   );
   await t.test("rota inexistente mantém acentuação correta", async () => {

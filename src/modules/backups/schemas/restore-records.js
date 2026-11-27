@@ -42,6 +42,7 @@ const optionalReferences = new Set([
   "Idea.story",
 ]);
 const integerColumns = new Set([
+  "sort_order",
   "progress_percentage",
   "age",
   "order_index",
@@ -52,6 +53,7 @@ const integerColumns = new Set([
   "target_value",
 ]);
 const nonBlankColumns = new Set([
+  "client_id",
   "name",
   "title",
   "unit",
@@ -114,8 +116,12 @@ function prepareRecord(definition, row, ids, ownerId) {
   const { name, fields, aliases = {} } = definition;
   const source = ids.get(name).get(row.id.toLowerCase());
   const output = { id: source.id };
-  for (const field of fields)
-    output[field] = validateField(name, field, row[toCamelCase(field)]);
+  for (const field of fields) {
+    const value =
+      row[toCamelCase(field)] ??
+      (field === "client_id" ? row.id : field === "sort_order" ? 0 : null);
+    output[field] = validateField(name, field, value);
+  }
   for (const [field, column] of Object.entries(aliases))
     output[column] = validateField(name, column, row[field]);
   for (const [field, column] of Object.entries(recordReferences(definition))) {
@@ -151,7 +157,8 @@ export function findReference(ids, type, id) {
 
 function validateField(type, column, value) {
   if (
-    nonBlankColumns.has(column) ||
+    (nonBlankColumns.has(column) &&
+      !(type === "Idea" && column === "category")) ||
     (type === "Idea" && column === "content")
   ) {
     if (typeof value !== "string" || !value.trim())
@@ -168,7 +175,7 @@ function validateField(type, column, value) {
   }
   const valid = integerColumns.has(column)
     ? Number.isSafeInteger(value)
-    : column === "is_active"
+    : ["is_active", "completed"].includes(column)
       ? typeof value === "boolean"
       : typeof value === "string" && !value.includes("\u0000");
   if (!valid)

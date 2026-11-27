@@ -90,7 +90,7 @@ export function createStoryRouter(authenticate) {
       const { rows } = await db.query(
         "SELECT id,content FROM workspace_sections WHERE id=ANY($1::varchar[])",
         [
-          ["goals", "ideas", "concepts", "events", "writing"].map(
+          ["concepts", "events", "writing"].map(
             (section) => `${owner}:${section}`,
           ),
         ],

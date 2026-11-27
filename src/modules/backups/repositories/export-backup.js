@@ -3,8 +3,12 @@ import {
   recordReferences,
   toCamelCase,
 } from "./backup-records.js";
+import {
+  existingWorkspaceRecords,
+  loadOwnedStoryIds,
+} from "../../workspace/records.js";
 
-const arraySections = ["goals", "ideas", "concepts", "events"];
+const arraySections = ["concepts", "events"];
 const sections = [...arraySections, "profile", "settings", "writing"];
 
 export async function readBackup(client, ownerId) {
@@ -74,6 +78,7 @@ async function readWorkspace(client, ownerId, profile) {
     [ids],
   );
   const documents = new Map(rows.map((row) => [row.id, row]));
+  const storyIds = await loadOwnedStoryIds(client, ownerId);
 
   return Object.fromEntries(
     sections.map((section, index) => {
@@ -81,6 +86,12 @@ async function readWorkspace(client, ownerId, profile) {
       const document = row
         ? { revision: Number(row.revision), value: JSON.parse(row.content) }
         : { revision: 0, value: defaultValue(section, profile) };
+      if (arraySections.includes(section))
+        document.value = existingWorkspaceRecords(
+          section,
+          document.value,
+          storyIds,
+        );
       return [section, document];
     }),
   );

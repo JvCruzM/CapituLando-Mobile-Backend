@@ -173,6 +173,9 @@ export const backupRecords = [
     name: "Goal",
     table: "goals",
     fields: [
+      "client_id",
+      "sort_order",
+      "completed",
       "title",
       "description",
       "unit",
@@ -185,7 +188,7 @@ export const backupRecords = [
   {
     name: "Idea",
     table: "ideas",
-    fields: ["content", ...timestamps],
+    fields: ["content", "client_id", "sort_order", "category", ...timestamps],
     references: { profile: "profile_id" },
   },
   {

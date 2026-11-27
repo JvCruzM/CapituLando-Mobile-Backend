@@ -7,6 +7,12 @@ import {
   requireValidPrincipal,
 } from "../../shared/middlewares/security.js";
 import { workspaceValueSchemas } from "../backups/schemas/restore-workspace.js";
+import { existingWorkspaceRecords, loadOwnedStoryIds } from "./records.js";
+import {
+  isCollection,
+  readCollection,
+  writeCollection,
+} from "./collections.js";
 
 export function createWorkspaceRouter(authenticate) {
   const router = Router();
@@ -23,13 +29,30 @@ export function createWorkspaceRouter(authenticate) {
     next();
   });
   router.get("/:section", async (req, res) => {
+    if (isCollection(req.params.section)) {
+      const document = await transaction(req.app.locals.db, async (db) => {
+        await db.query(
+          "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY",
+        );
+        return readCollection(db, res.locals.principal.id, req.params.section);
+      });
+      return res.json(document);
+    }
     const { rows } = await req.app.locals.db.query(
       "SELECT content,revision FROM workspace_sections WHERE id=$1",
       [`${res.locals.principal.id}:${req.params.section}`],
     );
+    const storyIds = await loadOwnedStoryIds(
+      req.app.locals.db,
+      res.locals.principal.id,
+    );
     res.json({
       revision: Number(rows[0]?.revision ?? 0),
-      value: rows[0] ? JSON.parse(rows[0].content) : [],
+      value: existingWorkspaceRecords(
+        req.params.section,
+        rows[0] ? JSON.parse(rows[0].content) : [],
+        storyIds,
+      ),
     });
   });
   router.put("/:section", async (req, res) => {
@@ -71,6 +94,8 @@ export function createWorkspaceRouter(authenticate) {
           );
       }
       const key = `${owner}:${req.params.section}`;
+      if (isCollection(req.params.section))
+        return writeCollection(db, owner, req.params.section, input);
       const { rows } = await db.query(
         "SELECT revision FROM workspace_sections WHERE id=$1",
         [key],

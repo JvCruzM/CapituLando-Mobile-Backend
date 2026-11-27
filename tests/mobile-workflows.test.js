@@ -1,15 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { readFile } from "node:fs/promises";
+import { installProjectSchema } from "./schema.js";
 import { once } from "node:events";
 import { PGlite } from "@electric-sql/pglite";
 import { createApp } from "../src/create-app.js";
 
 test("fluxos mobile usam o esquema compartilhado e isolam contas", async (t) => {
   const db = new PGlite();
-  await db.exec(
-    await readFile(new URL("./project-schema.sql", import.meta.url), "utf8"),
-  );
+  await installProjectSchema(db);
   const owners = [];
   for (const name of ["owner", "other"]) {
     const { rows } = await db.query(
@@ -262,6 +260,33 @@ test("fluxos mobile usam o esquema compartilhado e isolam contas", async (t) => 
         revision: 0,
         value: [{ id: "i1", projectId: story.id, content: "Ideia real" }],
       });
+      assert.equal(
+        (
+          await db.query(
+            "SELECT count(*)::int AS n FROM ideas WHERE profile_id=$1",
+            [owners[0]],
+          )
+        ).rows[0].n,
+        1,
+      );
+      assert.equal(
+        (
+          await db.query(
+            "SELECT count(*)::int AS n FROM goals WHERE profile_id=$1",
+            [owners[0]],
+          )
+        ).rows[0].n,
+        1,
+      );
+      assert.equal(
+        (
+          await db.query(
+            "SELECT count(*)::int AS n FROM workspace_sections WHERE id=ANY($1::varchar[])",
+            [[`${owners[0]}:ideas`, `${owners[0]}:goals`]],
+          )
+        ).rows[0].n,
+        0,
+      );
     },
   );
   let character, otherCharacter, location, organization, event, link;
@@ -539,11 +564,43 @@ test("fluxos mobile usam o esquema compartilhado e isolam contas", async (t) => 
       });
       const backup = await call("/api/backup");
       assert.equal(backup.workspace.writing.value.content.length, 130000);
-      assert.equal(backup.workspace.ideas.value[0].content, "Ideia real");
+      assert.equal(backup.records.Idea[0].content, "Ideia real");
       await call("/api/backup", 204, "POST", backup);
       assert.equal((await call("/api/stories")).length, 1);
       const restored = await call("/api/backup");
       assert.equal(restored.workspace.writing.value.content.length, 130000);
+      const legacy = structuredClone(restored);
+      legacy.workspace.ideas = {
+        revision: 0,
+        value: legacy.records.Idea.map((item) => ({
+          id: item.clientId,
+          projectId: item.story.id,
+          content: item.content,
+          category: item.category,
+          createdAt: item.createdAt,
+        })),
+      };
+      legacy.workspace.goals = {
+        revision: 0,
+        value: legacy.records.Goal.map((item) => ({
+          id: item.clientId,
+          title: item.title,
+          unit: item.unit,
+          current: item.currentValue,
+          target: item.targetValue,
+          completed: item.completed,
+          ...(item.story ? { projectId: item.story.id } : {}),
+        })),
+      };
+      legacy.records.Idea = [];
+      legacy.records.Goal = [];
+      await call("/api/backup", 204, "POST", legacy);
+      assert.equal((await call("/api/workspace/ideas")).value.length, 1);
+      assert.equal((await call("/api/workspace/goals")).value.length, 1);
+      const upgraded = await call("/api/backup");
+      assert.equal(upgraded.records.Idea.length, 1);
+      assert.equal(upgraded.records.Goal.length, 1);
+      assert.equal(upgraded.workspace.ideas, undefined);
       const restoredStory = (await call("/api/stories"))[0];
       const restoredRecovery = await call(
         "/api/writing/workspace?storyId=" + restoredStory.id,

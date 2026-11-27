@@ -1,4 +1,4 @@
-﻿export async function readDashboard(db, ownerId) {
+export async function readDashboard(db, ownerId) {
   const { rows } = await db.query(
     `SELECT
        COUNT(*)::int AS "storyCount",
@@ -19,30 +19,27 @@
     [ownerId],
   );
 
-  const { rows: sections } = await db.query(
-    `SELECT id, content
-     FROM workspace_sections
-     WHERE id = ANY($1::text[])`,
-    [[`${ownerId}:goals`, `${ownerId}:ideas`]],
+  const {
+    rows: [totals],
+  } = await db.query(
+    `
+    SELECT
+      (SELECT count(*)::int FROM ideas WHERE profile_id=$1) AS "ideaCount",
+      count(*)::int AS total,
+      count(*) FILTER (WHERE completed IS TRUE OR (completed IS NULL AND current_value>=target_value))::int AS completed
+    FROM goals WHERE profile_id=$1`,
+    [ownerId],
   );
-
-  const documents = Object.fromEntries(
-    sections.map((section) => [section.id, JSON.parse(section.content)]),
-  );
-
-  const goals = documents[`${ownerId}:goals`] ?? [];
-  const ideas = documents[`${ownerId}:ideas`] ?? [];
-  const completedGoals = goals.filter((goal) => goal.completed).length;
 
   return {
     ...rows[0],
     goals: {
-      total: goals.length,
-      completed: completedGoals,
-      percentage: goals.length
-        ? Math.round((completedGoals / goals.length) * 100)
+      total: totals.total,
+      completed: totals.completed,
+      percentage: totals.total
+        ? Math.round((totals.completed / totals.total) * 100)
         : 0,
     },
-    ideaCount: ideas.length,
+    ideaCount: totals.ideaCount,
   };
 }

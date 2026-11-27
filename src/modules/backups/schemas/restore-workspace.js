@@ -29,7 +29,7 @@ export const workspaceValueSchemas = {
     .array(
       z.looseObject({
         id,
-        projectId,
+        projectId: projectId.nullish(),
         content: requiredText(100000),
         category: optionalText(100),
         createdAt: optionalText(100),
