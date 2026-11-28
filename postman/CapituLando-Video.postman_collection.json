@@ -1,0 +1,1294 @@
+{
+  "info": {
+    "_postman_id": "133ec92e-98ce-45c8-9382-6969fc02ba73",
+    "name": "CapituLando — Vídeo",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Sequência executável: quatro entidades (história, raça, personagem e organização), dois relacionamentos com CRUD, logout e comprovação de revogação."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "01 — Login e variáveis",
+      "item": [
+        {
+          "name": "01 — Entrar e iniciar demonstração",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set('runTag',Date.now().toString(36));for(const key of ['videoStoryId','videoRaceId','videoOrganizationId','videoCharacterId','videoTargetCharacterId','videoRelationshipId','videoOrganizationLinkId'])pm.environment.unset(key);",
+                  "for(const key of [\"email\",\"password\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  "if(pm.response.code===200){const data=pm.response.json();",
+                  "pm.environment.set(\"accessToken\",data.accessToken);",
+                  "pm.environment.set(\"refreshToken\",data.refreshToken);",
+                  "pm.environment.set(\"sessionId\",data.sessionId);",
+                  "pm.environment.set(\"userRole\",data.user.role);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "02 — Criar quatro entidades",
+      "item": [
+        {
+          "name": "02 — Criar história",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"[Postman vídeo {{runTag}}] A Biblioteca das Estrelas\",\n  \"genre\": \"Fantasia\",\n  \"description\": \"Registro temporário da apresentação.\",\n  \"status\": \"DRAFT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"runTag\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"videoStoryId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 — Criar raça",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/races",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman vídeo {{runTag}}] Velários\",\n  \"description\": \"Povo dos mapas.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"runTag\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"videoRaceId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 — Criar organização",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/organizations",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman vídeo {{runTag}}] Ordem dos Cartógrafos\",\n  \"type\": \"Sociedade\",\n  \"description\": \"Organização da demonstração.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"runTag\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"videoOrganizationId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 — Criar personagem Lia",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/characters",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman vídeo {{runTag}}] Lia\",\n  \"raceId\": \"{{videoRaceId}}\",\n  \"description\": \"Restauradora de documentos.\",\n  \"age\": 27\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"runTag\",\"videoRaceId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"videoCharacterId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 — Criar personagem Tomás",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/characters",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman vídeo {{runTag}}] Tomás\",\n  \"raceId\": \"{{videoRaceId}}\",\n  \"description\": \"Aliado da investigação.\",\n  \"age\": 31\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"runTag\",\"videoRaceId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"videoTargetCharacterId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "03 — Consultar e editar entidades",
+      "item": [
+        {
+          "name": "07 — Listar histórias",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 — Editar história",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"[Postman vídeo {{runTag}}] A Biblioteca das Estrelas — revisada\",\n  \"genre\": \"Fantasia\",\n  \"status\": \"IN_PROGRESS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"runTag\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09 — Consultar raça",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/races/{{videoRaceId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"videoRaceId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10 — Editar raça",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/races/{{videoRaceId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman vídeo {{runTag}}] Velários\",\n  \"description\": \"Cultura revisada no Postman.\",\n  \"culture\": \"Preservadores de mapas.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"videoRaceId\",\"runTag\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "11 — Consultar organização",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/organizations/{{videoOrganizationId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"videoOrganizationId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "12 — Editar organização",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/organizations/{{videoOrganizationId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman vídeo {{runTag}}] Ordem dos Cartógrafos\",\n  \"description\": \"Organização revisada no Postman.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"videoOrganizationId\",\"runTag\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "13 — Consultar personagem",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/characters/{{videoCharacterId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"videoCharacterId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "14 — Editar personagem",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/characters/{{videoCharacterId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman vídeo {{runTag}}] Lia\",\n  \"raceId\": \"{{videoRaceId}}\",\n  \"description\": \"Personagem revisada no Postman.\",\n  \"age\": 28\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"videoCharacterId\",\"runTag\",\"videoRaceId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "04 — Criar, consultar e editar dois relacionamentos",
+      "item": [
+        {
+          "name": "15 — Vincular personagens",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/character-relationships",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceCharacterId\": \"{{videoCharacterId}}\",\n  \"targetCharacterId\": \"{{videoTargetCharacterId}}\",\n  \"type\": \"Amizade\",\n  \"description\": \"Aliados na investigação.\",\n  \"level\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"videoCharacterId\",\"videoTargetCharacterId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"videoRelationshipId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "16 — Listar relacionamentos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/character-relationships",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "17 — Editar relacionamento",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/character-relationships/{{videoRelationshipId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceCharacterId\": \"{{videoCharacterId}}\",\n  \"targetCharacterId\": \"{{videoTargetCharacterId}}\",\n  \"type\": \"Aliança\",\n  \"description\": \"Confiança fortalecida.\",\n  \"level\": 8\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"videoRelationshipId\",\"videoCharacterId\",\"videoTargetCharacterId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "18 — Vincular personagem à organização",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/character-organizations",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"characterId\": \"{{videoCharacterId}}\",\n  \"organizationId\": \"{{videoOrganizationId}}\",\n  \"role\": \"Pesquisadora\",\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"videoCharacterId\",\"videoOrganizationId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"videoOrganizationLinkId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "19 — Listar vínculos da organização",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/character-organizations",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "20 — Editar vínculo da organização",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/character-organizations/{{videoOrganizationLinkId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"Coordenadora\",\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"videoOrganizationLinkId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "05 — Excluir relacionamentos e entidades da demonstração",
+      "item": [
+        {
+          "name": "21 — Excluir vínculo da organização",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/character-organizations/{{videoOrganizationLinkId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"videoOrganizationLinkId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "22 — Excluir relacionamento entre personagens",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/character-relationships/{{videoRelationshipId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"videoRelationshipId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "23 — Excluir Tomás",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/characters/{{videoTargetCharacterId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"videoTargetCharacterId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "24 — Excluir Lia",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/characters/{{videoCharacterId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"videoCharacterId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "25 — Excluir organização",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/organizations/{{videoOrganizationId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"videoOrganizationId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "26 — Excluir raça",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}/races/{{videoRaceId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"videoRaceId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "27 — Excluir história",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{videoStoryId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "28 — Confirmar que a história não existe mais",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/universe/stories/{{videoStoryId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"videoStoryId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404',function(){const expected=[404];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "06 — Logout e proteção das rotas",
+      "item": [
+        {
+          "name": "29 — Sair",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/logout",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"refreshToken\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  "if(pm.response.code===204){pm.environment.set(\"revokedAccessToken\",pm.environment.get(\"accessToken\"));pm.environment.unset('accessToken');pm.environment.unset('refreshToken');}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "30 — Token encerrado não acessa dados",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{revokedAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get(\"revokedAccessToken\"))throw new Error('Execute o logout primeiro.');",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401',function(){const expected=[401];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": ""
+    }
+  ],
+  "variable": [
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "revokedAccessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "runTag",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "videoCharacterId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "videoOrganizationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "videoOrganizationLinkId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "videoRaceId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "videoRelationshipId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "videoStoryId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "videoTargetCharacterId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

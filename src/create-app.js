@@ -1,32 +1,35 @@
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
-import { createAuthRouter } from "./modules/auth/index.js";
-import { createSessionRouter } from "./modules/sessions/index.js";
-import { createProfileRouter } from "./modules/profile/index.js";
-import { authenticate as authenticateSession } from "./shared/middlewares/auth.js";
-import { errorHandler } from "./shared/middlewares/error-handler.js";
+
 import {
+  createAuthRouter,
+  createSessionRouter,
+  createProfileRouter,
+  createBackupRouter,
+  createCreatureRouter,
+  createItemRouter,
+  createRaceRouter,
+  createUniverseRouter,
+  createCharacterRouter,
+  createCharacterOrganizationRouter,
+  createCharacterRelationshipRouter,
+  createLocationRouter,
+  createOrganizationRouter,
+  createWorldRuleRouter,
+  createEventRouter,
+  createEventCharacterRouter,
+  createWritingRouter,
+  createStoryRouter,
+  createWorkspaceRouter,
+  createDashboardRouter,
+} from "./modules/index.js";
+import {
+  authenticate as authenticateSession,
+  errorHandler,
   apiSecurityHeaders,
   createWriteRateLimiter,
-} from "./shared/middlewares/security.js";
-import { createBackupRouter } from "./modules/backups/index.js";
-import { createCreatureRouter } from "./modules/creatures/index.js";
-import { createItemRouter } from "./modules/items/index.js";
-import { createRaceRouter } from "./modules/races/index.js";
-import { createUniverseRouter } from "./modules/universe/index.js";
-import { createCharacterRouter } from "./modules/characters/index.js";
-import { createCharacterOrganizationRouter } from "./modules/character-organizations/index.js";
-import { createCharacterRelationshipRouter } from "./modules/character-relationships/index.js";
-import { createLocationRouter } from "./modules/locations/index.js";
-import { createOrganizationRouter } from "./modules/organizations/index.js";
-import { createWorldRuleRouter } from "./modules/world-rules/index.js";
-import { createEventRouter } from "./modules/events/index.js";
-import { createEventCharacterRouter } from "./modules/event-characters/index.js";
-import { createWritingRouter } from "./modules/writing/index.js";
-import { createStoryRouter } from "./modules/stories/index.js";
-import { createWorkspaceRouter } from "./modules/workspace/index.js";
-import { createDashboardRouter } from "./modules/dashboard/index.js";
+} from "./shared/middlewares/index.js";
 
 export function createApp(
   origins,

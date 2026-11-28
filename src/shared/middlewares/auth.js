@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AppError } from "../errors/app-error.js";
+import { AppError } from "../errors/index.js";
 import { verifyAccessToken } from "../utils/crypto.js";
 
 const claimsSchema = z.object({

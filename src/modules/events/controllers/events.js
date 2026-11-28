@@ -1,5 +1,5 @@
 import { transaction } from "../../../database/transaction.js";
-import { AppError } from "../../../shared/errors/app-error.js";
+import { AppError } from "../../../shared/errors/index.js";
 import { createEventRepository } from "../repositories/events.js";
 import { sendSecurityError } from "../../../shared/middlewares/security.js";
 

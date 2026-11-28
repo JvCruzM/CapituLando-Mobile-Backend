@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { AppError } from "../../shared/errors/app-error.js";
+import { AppError } from "../../shared/errors/index.js";
 import { transaction } from "../../database/transaction.js";
 
 const tables = [

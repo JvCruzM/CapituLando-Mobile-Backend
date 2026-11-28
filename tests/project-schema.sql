@@ -413,3 +413,60 @@ CREATE INDEX refresh_tokens_expires_at_idx ON refresh_tokens(expires_at);
 
 ALTER TABLE chapters
     ADD COLUMN revision BIGINT NOT NULL DEFAULT 0 CHECK (revision >= 0);
+
+-- Estado final da V9 apenas para os bancos temporários dos testes.
+-- A migration de produção permanece no Flyway do backend Spring.
+ALTER TABLE ideas
+    ADD COLUMN client_id VARCHAR(100) NOT NULL,
+    ADD COLUMN category VARCHAR(100),
+    ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0,
+    ADD CONSTRAINT ideas_owner_client_key UNIQUE(profile_id,client_id),
+    DROP CONSTRAINT ideas_story_id_fkey;
+ALTER TABLE goals
+    ADD COLUMN client_id VARCHAR(100) NOT NULL,
+    ADD COLUMN completed BOOLEAN,
+    ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0,
+    ADD CONSTRAINT goals_owner_client_key UNIQUE(profile_id,client_id),
+    DROP CONSTRAINT goals_story_id_fkey;
+ALTER TABLE stories ADD CONSTRAINT stories_id_profile_key UNIQUE(id,profile_id);
+ALTER TABLE ideas ADD CONSTRAINT ideas_owned_story_fk
+    FOREIGN KEY(story_id,profile_id) REFERENCES stories(id,profile_id) ON DELETE CASCADE;
+ALTER TABLE goals ADD CONSTRAINT goals_owned_story_fk
+    FOREIGN KEY(story_id,profile_id) REFERENCES stories(id,profile_id) ON DELETE CASCADE;
+ALTER TABLE workspace_sections ADD CONSTRAINT workspace_relational_collections_check
+    CHECK(id NOT LIKE '%:ideas' AND id NOT LIKE '%:goals');
+
+CREATE TABLE collection_revisions (
+    id VARCHAR(120) PRIMARY KEY,
+    profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    section VARCHAR(10) NOT NULL CHECK(section IN ('ideas','goals')),
+    revision BIGINT NOT NULL DEFAULT 0 CHECK(revision>=0),
+    UNIQUE(profile_id,section)
+);
+
+CREATE FUNCTION collection_client_id() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    IF NEW.client_id IS NULL THEN NEW.client_id := NEW.id::text; END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER ideas_client_id BEFORE INSERT ON ideas
+    FOR EACH ROW EXECUTE FUNCTION collection_client_id();
+CREATE TRIGGER goals_client_id BEFORE INSERT ON goals
+    FOR EACH ROW EXECUTE FUNCTION collection_client_id();
+
+CREATE FUNCTION touch_collection_revision() RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE owner UUID;
+BEGIN
+    IF current_setting('capitulando.collection_write',true)='on' THEN RETURN NULL; END IF;
+    owner := CASE WHEN TG_OP='DELETE' THEN OLD.profile_id ELSE NEW.profile_id END;
+    IF EXISTS(SELECT 1 FROM profiles WHERE id=owner) THEN
+        INSERT INTO collection_revisions(id,profile_id,section,revision)
+        VALUES(owner::text||':'||TG_TABLE_NAME,owner,TG_TABLE_NAME,1)
+        ON CONFLICT(id) DO UPDATE SET revision=collection_revisions.revision+1;
+    END IF;
+    RETURN NULL;
+END $$;
+CREATE TRIGGER ideas_revision AFTER INSERT OR UPDATE OR DELETE ON ideas
+    FOR EACH ROW EXECUTE FUNCTION touch_collection_revision();
+CREATE TRIGGER goals_revision AFTER INSERT OR UPDATE OR DELETE ON goals
+    FOR EACH ROW EXECUTE FUNCTION touch_collection_revision();

@@ -1,0 +1,4119 @@
+{
+  "info": {
+    "_postman_id": "432c43fe-c9ec-408d-81d1-a7e9a8fbe12a",
+    "name": "CapituLando — API completa",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "CapituLando • API Express/PostgreSQL. Importe um ambiente e preencha somente as credenciais da sua conta de testes. Tokens e IDs são capturados nas respostas. Documentação e roteiro no README do repositório."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "01 — Autenticação (uso individual; confirmar e-mail antes do login)",
+      "item": [
+        {
+          "name": "Cadastrar conta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/register",
+            "description": "Use um e-mail acessível e um username novo. O token de confirmação chega por e-mail, não pela resposta da API.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"username\",\"email\",\"password\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 202',function(){const expected=[202];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Confirmar e-mail",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/verify-email",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{verificationToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"verificationToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Entrar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"email\",\"password\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  "if(pm.response.code===200){const data=pm.response.json();",
+                  "pm.environment.set(\"accessToken\",data.accessToken);",
+                  "pm.environment.set(\"refreshToken\",data.refreshToken);",
+                  "pm.environment.set(\"sessionId\",data.sessionId);",
+                  "pm.environment.set(\"userRole\",data.user.role);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar minha conta",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/me",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Renovar sessão (rotaciona o refresh token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/refresh",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"refreshToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  "if(pm.response.code===200){const data=pm.response.json();",
+                  "pm.environment.set(\"accessToken\",data.accessToken);",
+                  "pm.environment.set(\"refreshToken\",data.refreshToken);",
+                  "pm.environment.set(\"sessionId\",data.sessionId);",
+                  "pm.environment.set(\"userRole\",data.user.role);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Solicitar recuperação",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/forgot-password",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"email\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reenviar confirmação",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/resend-verification",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"email\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Redefinir senha com token do e-mail",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/reset-password",
+            "description": "Altera a senha e revoga sessões. Após testar, atualize password no ambiente e faça novo login.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{resetToken}}\",\n  \"newPassword\": \"{{newPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"resetToken\",\"newPassword\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sair",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/logout",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"refreshToken\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  "if(pm.response.code===204){pm.environment.set(\"revokedAccessToken\",pm.environment.get(\"accessToken\"));pm.environment.unset('accessToken');pm.environment.unset('refreshToken');}"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "02 — Saúde e segurança",
+      "item": [
+        {
+          "name": "Saúde pública",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["", ""]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Histórias sem login (401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["", ""]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401',function(){const expected=[401];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Corpo inválido (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400',function(){const expected=[400];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Permissão de administrador",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/sessions/stats",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 ou 403',function(){const expected=[200,403];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  "pm.test('Papel respeitado',function(){const expected=pm.environment.get(\"userRole\")==='ADMIN'?200:403;if(pm.response.code!==expected)throw new Error('RBAC não corresponde ao papel da conta');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Histórias com token revogado (401)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{revokedAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get(\"revokedAccessToken\"))throw new Error('Faça logout antes desta verificação.');",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401',function(){const expected=[401];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "03 — Histórias",
+      "item": [
+        {
+          "name": "Criar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"[Postman] A Biblioteca das Estrelas\",\n  \"genre\": \"Fantasia\",\n  \"description\": \"História criada para testar a API.\",\n  \"status\": \"DRAFT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"storyId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"[Postman] A Biblioteca das Estrelas — revisada\",\n  \"genre\": \"Fantasia\",\n  \"description\": \"Descrição atualizada.\",\n  \"status\": \"IN_PROGRESS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}",
+            "description": "Remova primeiro os vínculos que utilizam este registro. A API responde 409 quando há vínculos impeditivos."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Catálogo para executar requisições individualmente. Mantenha os registros necessários aos relacionamentos antes de testar exclusões."
+    },
+    {
+      "name": "04 — Raças",
+      "item": [
+        {
+          "name": "Criar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/races",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman] Velários\",\n  \"description\": \"Povo que percebe memórias em objetos submersos.\",\n  \"culture\": \"Cartógrafos do litoral.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"raceId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/races",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/races/{{raceId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"raceId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/races/{{raceId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman] Velários revisados\",\n  \"description\": \"Descrição revisada.\",\n  \"culture\": \"Preservadores de mapas.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"raceId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/races/{{raceId}}",
+            "description": "Remova primeiro os vínculos que utilizam este registro. A API responde 409 quando há vínculos impeditivos."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"raceId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Catálogo para executar requisições individualmente. Mantenha os registros necessários aos relacionamentos antes de testar exclusões."
+    },
+    {
+      "name": "05 — Locais",
+      "item": [
+        {
+          "name": "Criar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/locations",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman] Porto das Brumas\",\n  \"type\": \"Cidade\",\n  \"description\": \"Cidade costeira.\",\n  \"region\": \"Costa Norte\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"locationId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/locations",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/locations/{{locationId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"locationId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/locations/{{locationId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman] Porto das Brumas\",\n  \"description\": \"Cidade revisada.\",\n  \"region\": \"Costa Norte\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"locationId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/locations/{{locationId}}",
+            "description": "Remova primeiro os vínculos que utilizam este registro. A API responde 409 quando há vínculos impeditivos."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"locationId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Catálogo para executar requisições individualmente. Mantenha os registros necessários aos relacionamentos antes de testar exclusões."
+    },
+    {
+      "name": "06 — Organizações",
+      "item": [
+        {
+          "name": "Criar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/organizations",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman] Ordem dos Cartógrafos\",\n  \"type\": \"Sociedade\",\n  \"description\": \"Organização da demonstração.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"organizationId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/organizations",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/organizations/{{organizationId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"organizationId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/organizations/{{organizationId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman] Ordem dos Cartógrafos\",\n  \"type\": \"Sociedade\",\n  \"description\": \"Organização revisada.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"organizationId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/organizations/{{organizationId}}",
+            "description": "Remova primeiro os vínculos que utilizam este registro. A API responde 409 quando há vínculos impeditivos."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"organizationId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Catálogo para executar requisições individualmente. Mantenha os registros necessários aos relacionamentos antes de testar exclusões."
+    },
+    {
+      "name": "07 — Personagens",
+      "item": [
+        {
+          "name": "Criar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/characters",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman] Lia Vilar\",\n  \"raceId\": \"{{raceId}}\",\n  \"description\": \"Restauradora de documentos.\",\n  \"age\": 27\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"raceId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"characterId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar segundo personagem para relacionamentos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/characters",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman] Tomás Ferraz\",\n  \"description\": \"Aliado da investigação.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"targetCharacterId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/characters",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/characters/{{characterId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"characterId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/characters/{{characterId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman] Lia Vilar\",\n  \"raceId\": \"{{raceId}}\",\n  \"description\": \"Personagem revisada.\",\n  \"age\": 28\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"characterId\",\"raceId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/characters/{{characterId}}",
+            "description": "Remova primeiro os vínculos que utilizam este registro. A API responde 409 quando há vínculos impeditivos."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"characterId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Catálogo para executar requisições individualmente. Mantenha os registros necessários aos relacionamentos antes de testar exclusões."
+    },
+    {
+      "name": "08 — Criaturas",
+      "item": [
+        {
+          "name": "Criar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/creatures",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman] Coruja de Sal\",\n  \"description\": \"Ave que percebe memórias.\",\n  \"habitat\": \"Faróis\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"creatureId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/creatures",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/creatures/{{creatureId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"creatureId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/creatures/{{creatureId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman] Coruja de Sal\",\n  \"description\": \"Descrição revisada.\",\n  \"habitat\": \"Faróis e ruínas\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"creatureId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/creatures/{{creatureId}}",
+            "description": "Remova primeiro os vínculos que utilizam este registro. A API responde 409 quando há vínculos impeditivos."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"creatureId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Catálogo para executar requisições individualmente. Mantenha os registros necessários aos relacionamentos antes de testar exclusões."
+    },
+    {
+      "name": "09 — Itens",
+      "item": [
+        {
+          "name": "Criar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/items",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman] Bússola das Marés\",\n  \"type\": \"Artefato\",\n  \"description\": \"Aponta para lembranças.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"itemId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/items",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/items/{{itemId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"itemId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/items/{{itemId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"[Postman] Bússola das Marés\",\n  \"type\": \"Artefato\",\n  \"description\": \"Artefato revisado.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"itemId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/items/{{itemId}}",
+            "description": "Remova primeiro os vínculos que utilizam este registro. A API responde 409 quando há vínculos impeditivos."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"itemId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Catálogo para executar requisições individualmente. Mantenha os registros necessários aos relacionamentos antes de testar exclusões."
+    },
+    {
+      "name": "10 — Regras do universo",
+      "item": [
+        {
+          "name": "Criar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/world-rules",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"[Postman] O preço das lembranças\",\n  \"category\": \"Magia\",\n  \"description\": \"Uma lembrança exige outra em troca.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"ruleId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/world-rules",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/world-rules/{{ruleId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"ruleId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/world-rules/{{ruleId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"[Postman] O preço das lembranças\",\n  \"category\": \"Magia\",\n  \"description\": \"Regra revisada.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"ruleId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/world-rules/{{ruleId}}",
+            "description": "Remova primeiro os vínculos que utilizam este registro. A API responde 409 quando há vínculos impeditivos."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"ruleId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Catálogo para executar requisições individualmente. Mantenha os registros necessários aos relacionamentos antes de testar exclusões."
+    },
+    {
+      "name": "11 — Eventos",
+      "item": [
+        {
+          "name": "Criar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/events",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"[Postman] O mapa encontrado\",\n  \"description\": \"Início da investigação.\",\n  \"chronologicalDate\": \"2026-05-03\",\n  \"sequenceOrder\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"eventId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/events",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/events/{{eventId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"eventId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/events/{{eventId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"[Postman] O mapa encontrado\",\n  \"description\": \"Evento revisado.\",\n  \"chronologicalDate\": \"2026-05-04\",\n  \"sequenceOrder\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"eventId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/events/{{eventId}}",
+            "description": "Remova primeiro os vínculos que utilizam este registro. A API responde 409 quando há vínculos impeditivos."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"eventId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Catálogo para executar requisições individualmente. Mantenha os registros necessários aos relacionamentos antes de testar exclusões."
+    },
+    {
+      "name": "12 — Capítulos e rascunhos",
+      "item": [
+        {
+          "name": "Criar capítulo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/writing/stories/{{storyId}}/items",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"[Postman] O mapa\",\n  \"content\": \"<h1>O mapa</h1><p>Uma história começa.</p>\",\n  \"kind\": \"chapter\",\n  \"status\": \"IN_REVIEW\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"chapterId\",data.id);}",
+                  "if(pm.response.code===201)pm.environment.set(\"chapterVersion\",pm.response.json().version);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar capítulos e rascunhos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/writing/stories/{{storyId}}/items",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar capítulo e sua versão",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/writing/stories/{{storyId}}/items/{{chapterId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"chapterId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  "if(pm.response.code===200)pm.environment.set(\"chapterVersion\",pm.response.json().version);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar com controle de versão",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/writing/stories/{{storyId}}/items/{{chapterId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\":\"[Postman] O mapa revisado\",\"content\":\"<p>Texto revisado.</p>\",\"kind\":\"chapter\",\"status\":\"PUBLISHED\",\"expectedVersion\":{{chapterVersion}}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"chapterId\",\"chapterVersion\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  "if(pm.response.code===200)pm.environment.set(\"chapterVersion\",pm.response.json().version);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir capítulo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/writing/stories/{{storyId}}/items/{{chapterId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"chapterId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "13 — Relacionamento personagem–personagem",
+      "item": [
+        {
+          "name": "Criar relacionamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/character-relationships",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceCharacterId\": \"{{characterId}}\",\n  \"targetCharacterId\": \"{{targetCharacterId}}\",\n  \"type\": \"Amizade\",\n  \"description\": \"Aliados na investigação.\",\n  \"level\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"characterId\",\"targetCharacterId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"relationshipId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar relacionamentos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/character-relationships",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar relacionamento",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/character-relationships/{{relationshipId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceCharacterId\": \"{{characterId}}\",\n  \"targetCharacterId\": \"{{targetCharacterId}}\",\n  \"type\": \"Aliança\",\n  \"description\": \"Confiança fortalecida.\",\n  \"level\": 8\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"relationshipId\",\"characterId\",\"targetCharacterId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir relacionamento",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/character-relationships/{{relationshipId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"relationshipId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "14 — Relacionamento personagem–organização",
+      "item": [
+        {
+          "name": "Criar vínculo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/character-organizations",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"characterId\": \"{{characterId}}\",\n  \"organizationId\": \"{{organizationId}}\",\n  \"role\": \"Pesquisadora\",\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"characterId\",\"organizationId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"organizationLinkId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar vínculos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/character-organizations",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar vínculo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/character-organizations/{{organizationLinkId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"Coordenadora\",\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"organizationLinkId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir vínculo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/character-organizations/{{organizationLinkId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"organizationLinkId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "15 — Participantes de eventos",
+      "item": [
+        {
+          "name": "Vincular participante",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/event-characters",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"characterId\": \"{{characterId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"eventId\",\"characterId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"eventCharacterId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar participantes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/event-characters?eventId={{eventId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"eventId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remover participante",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{storyId}}/event-characters/{{eventCharacterId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"eventCharacterId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "16 — Ideias (tabela ideas)",
+      "item": [
+        {
+          "name": "Consultar lista e revisão",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/workspace/ideas",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  "if(pm.response.code===200){const data=pm.response.json();pm.environment.set(\"ideasRevision\",data.revision);pm.environment.set(\"ideasValue\",JSON.stringify(data.value));}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Adicionar amostra sem apagar os demais",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/workspace/ideas",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{{collectionPayload}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.environment.get(\"ideasRevision\")===undefined)throw new Error('Consulte a lista e a revisão primeiro.');",
+                  "const list=JSON.parse(pm.environment.get(\"ideasValue\")||'[]');",
+                  "let id=pm.environment.get(\"postmanIdeaId\");",
+                  "if(\"create\"==='create'){id='postman_'+Date.now();pm.environment.set(\"postmanIdeaId\",id);}",
+                  "if(!id)throw new Error('Adicione uma amostra antes de editar ou excluir.');",
+                  "const record={",
+                  "  \"id\": \"__ID__\",",
+                  "  \"projectId\": \"__STORY__\",",
+                  "  \"content\": \"[Postman] Uma cidade esquece o próprio nome.\",",
+                  "  \"category\": \"Mundo\"",
+                  "};record.id=id;if(record.projectId)record.projectId=pm.variables.get('storyId');",
+                  "if(\"ideas\"==='ideas'&&!record.projectId)throw new Error('Crie uma história primeiro.');",
+                  "let value;",
+                  "if(\"create\"==='create')value=[...list,record];",
+                  "else if(\"create\"==='update'){if(!list.some(item=>item.id===id))throw new Error('A amostra não está na lista. Consulte novamente.');value=list.map(item=>item.id===id?{...item,...(\"ideas\"==='ideas'?{content:'[Postman] Ideia revisada.'}:{current:250})}:item);}",
+                  "else value=list.filter(item=>item.id!==id);",
+                  "pm.variables.set('collectionPayload',JSON.stringify({revision:Number(pm.environment.get(\"ideasRevision\")),value}));",
+                  "for(const key of [\"collectionPayload\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  "if(pm.response.code===200){const data=pm.response.json();pm.environment.set(\"ideasRevision\",data.revision);pm.environment.set(\"ideasValue\",JSON.stringify(data.value));}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar somente a amostra",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/workspace/ideas",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{{collectionPayload}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.environment.get(\"ideasRevision\")===undefined)throw new Error('Consulte a lista e a revisão primeiro.');",
+                  "const list=JSON.parse(pm.environment.get(\"ideasValue\")||'[]');",
+                  "let id=pm.environment.get(\"postmanIdeaId\");",
+                  "if(\"update\"==='create'){id='postman_'+Date.now();pm.environment.set(\"postmanIdeaId\",id);}",
+                  "if(!id)throw new Error('Adicione uma amostra antes de editar ou excluir.');",
+                  "const record={",
+                  "  \"id\": \"__ID__\",",
+                  "  \"projectId\": \"__STORY__\",",
+                  "  \"content\": \"[Postman] Uma cidade esquece o próprio nome.\",",
+                  "  \"category\": \"Mundo\"",
+                  "};record.id=id;if(record.projectId)record.projectId=pm.variables.get('storyId');",
+                  "if(\"ideas\"==='ideas'&&!record.projectId)throw new Error('Crie uma história primeiro.');",
+                  "let value;",
+                  "if(\"update\"==='create')value=[...list,record];",
+                  "else if(\"update\"==='update'){if(!list.some(item=>item.id===id))throw new Error('A amostra não está na lista. Consulte novamente.');value=list.map(item=>item.id===id?{...item,...(\"ideas\"==='ideas'?{content:'[Postman] Ideia revisada.'}:{current:250})}:item);}",
+                  "else value=list.filter(item=>item.id!==id);",
+                  "pm.variables.set('collectionPayload',JSON.stringify({revision:Number(pm.environment.get(\"ideasRevision\")),value}));",
+                  "for(const key of [\"collectionPayload\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  "if(pm.response.code===200){const data=pm.response.json();pm.environment.set(\"ideasRevision\",data.revision);pm.environment.set(\"ideasValue\",JSON.stringify(data.value));}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir somente a amostra",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/workspace/ideas",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{{collectionPayload}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.environment.get(\"ideasRevision\")===undefined)throw new Error('Consulte a lista e a revisão primeiro.');",
+                  "const list=JSON.parse(pm.environment.get(\"ideasValue\")||'[]');",
+                  "let id=pm.environment.get(\"postmanIdeaId\");",
+                  "if(\"delete\"==='create'){id='postman_'+Date.now();pm.environment.set(\"postmanIdeaId\",id);}",
+                  "if(!id)throw new Error('Adicione uma amostra antes de editar ou excluir.');",
+                  "const record={",
+                  "  \"id\": \"__ID__\",",
+                  "  \"projectId\": \"__STORY__\",",
+                  "  \"content\": \"[Postman] Uma cidade esquece o próprio nome.\",",
+                  "  \"category\": \"Mundo\"",
+                  "};record.id=id;if(record.projectId)record.projectId=pm.variables.get('storyId');",
+                  "if(\"ideas\"==='ideas'&&!record.projectId)throw new Error('Crie uma história primeiro.');",
+                  "let value;",
+                  "if(\"delete\"==='create')value=[...list,record];",
+                  "else if(\"delete\"==='update'){if(!list.some(item=>item.id===id))throw new Error('A amostra não está na lista. Consulte novamente.');value=list.map(item=>item.id===id?{...item,...(\"ideas\"==='ideas'?{content:'[Postman] Ideia revisada.'}:{current:250})}:item);}",
+                  "else value=list.filter(item=>item.id!==id);",
+                  "pm.variables.set('collectionPayload',JSON.stringify({revision:Number(pm.environment.get(\"ideasRevision\")),value}));",
+                  "for(const key of [\"collectionPayload\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  "if(pm.response.code===200){const data=pm.response.json();pm.environment.set(\"ideasRevision\",data.revision);pm.environment.set(\"ideasValue\",JSON.stringify(data.value));}"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "As rotas preservam o contrato de coleção, mas a persistência usa as tabelas próprias. GET antes de PUT; a revisão protege alterações concorrentes."
+    },
+    {
+      "name": "17 — Metas (tabela goals)",
+      "item": [
+        {
+          "name": "Consultar lista e revisão",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/workspace/goals",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  "if(pm.response.code===200){const data=pm.response.json();pm.environment.set(\"goalsRevision\",data.revision);pm.environment.set(\"goalsValue\",JSON.stringify(data.value));}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Adicionar amostra sem apagar os demais",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/workspace/goals",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{{collectionPayload}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.environment.get(\"goalsRevision\")===undefined)throw new Error('Consulte a lista e a revisão primeiro.');",
+                  "const list=JSON.parse(pm.environment.get(\"goalsValue\")||'[]');",
+                  "let id=pm.environment.get(\"postmanGoalId\");",
+                  "if(\"create\"==='create'){id='postman_'+Date.now();pm.environment.set(\"postmanGoalId\",id);}",
+                  "if(!id)throw new Error('Adicione uma amostra antes de editar ou excluir.');",
+                  "const record={",
+                  "  \"id\": \"__ID__\",",
+                  "  \"title\": \"[Postman] Revisar texto\",",
+                  "  \"unit\": \"palavras\",",
+                  "  \"current\": 100,",
+                  "  \"target\": 500,",
+                  "  \"completed\": false",
+                  "};record.id=id;if(record.projectId)record.projectId=pm.variables.get('storyId');",
+                  "if(\"goals\"==='ideas'&&!record.projectId)throw new Error('Crie uma história primeiro.');",
+                  "let value;",
+                  "if(\"create\"==='create')value=[...list,record];",
+                  "else if(\"create\"==='update'){if(!list.some(item=>item.id===id))throw new Error('A amostra não está na lista. Consulte novamente.');value=list.map(item=>item.id===id?{...item,...(\"goals\"==='ideas'?{content:'[Postman] Ideia revisada.'}:{current:250})}:item);}",
+                  "else value=list.filter(item=>item.id!==id);",
+                  "pm.variables.set('collectionPayload',JSON.stringify({revision:Number(pm.environment.get(\"goalsRevision\")),value}));",
+                  "for(const key of [\"collectionPayload\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  "if(pm.response.code===200){const data=pm.response.json();pm.environment.set(\"goalsRevision\",data.revision);pm.environment.set(\"goalsValue\",JSON.stringify(data.value));}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar somente a amostra",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/workspace/goals",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{{collectionPayload}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.environment.get(\"goalsRevision\")===undefined)throw new Error('Consulte a lista e a revisão primeiro.');",
+                  "const list=JSON.parse(pm.environment.get(\"goalsValue\")||'[]');",
+                  "let id=pm.environment.get(\"postmanGoalId\");",
+                  "if(\"update\"==='create'){id='postman_'+Date.now();pm.environment.set(\"postmanGoalId\",id);}",
+                  "if(!id)throw new Error('Adicione uma amostra antes de editar ou excluir.');",
+                  "const record={",
+                  "  \"id\": \"__ID__\",",
+                  "  \"title\": \"[Postman] Revisar texto\",",
+                  "  \"unit\": \"palavras\",",
+                  "  \"current\": 100,",
+                  "  \"target\": 500,",
+                  "  \"completed\": false",
+                  "};record.id=id;if(record.projectId)record.projectId=pm.variables.get('storyId');",
+                  "if(\"goals\"==='ideas'&&!record.projectId)throw new Error('Crie uma história primeiro.');",
+                  "let value;",
+                  "if(\"update\"==='create')value=[...list,record];",
+                  "else if(\"update\"==='update'){if(!list.some(item=>item.id===id))throw new Error('A amostra não está na lista. Consulte novamente.');value=list.map(item=>item.id===id?{...item,...(\"goals\"==='ideas'?{content:'[Postman] Ideia revisada.'}:{current:250})}:item);}",
+                  "else value=list.filter(item=>item.id!==id);",
+                  "pm.variables.set('collectionPayload',JSON.stringify({revision:Number(pm.environment.get(\"goalsRevision\")),value}));",
+                  "for(const key of [\"collectionPayload\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  "if(pm.response.code===200){const data=pm.response.json();pm.environment.set(\"goalsRevision\",data.revision);pm.environment.set(\"goalsValue\",JSON.stringify(data.value));}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir somente a amostra",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/workspace/goals",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{{collectionPayload}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.environment.get(\"goalsRevision\")===undefined)throw new Error('Consulte a lista e a revisão primeiro.');",
+                  "const list=JSON.parse(pm.environment.get(\"goalsValue\")||'[]');",
+                  "let id=pm.environment.get(\"postmanGoalId\");",
+                  "if(\"delete\"==='create'){id='postman_'+Date.now();pm.environment.set(\"postmanGoalId\",id);}",
+                  "if(!id)throw new Error('Adicione uma amostra antes de editar ou excluir.');",
+                  "const record={",
+                  "  \"id\": \"__ID__\",",
+                  "  \"title\": \"[Postman] Revisar texto\",",
+                  "  \"unit\": \"palavras\",",
+                  "  \"current\": 100,",
+                  "  \"target\": 500,",
+                  "  \"completed\": false",
+                  "};record.id=id;if(record.projectId)record.projectId=pm.variables.get('storyId');",
+                  "if(\"goals\"==='ideas'&&!record.projectId)throw new Error('Crie uma história primeiro.');",
+                  "let value;",
+                  "if(\"delete\"==='create')value=[...list,record];",
+                  "else if(\"delete\"==='update'){if(!list.some(item=>item.id===id))throw new Error('A amostra não está na lista. Consulte novamente.');value=list.map(item=>item.id===id?{...item,...(\"goals\"==='ideas'?{content:'[Postman] Ideia revisada.'}:{current:250})}:item);}",
+                  "else value=list.filter(item=>item.id!==id);",
+                  "pm.variables.set('collectionPayload',JSON.stringify({revision:Number(pm.environment.get(\"goalsRevision\")),value}));",
+                  "for(const key of [\"collectionPayload\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  "if(pm.response.code===200){const data=pm.response.json();pm.environment.set(\"goalsRevision\",data.revision);pm.environment.set(\"goalsValue\",JSON.stringify(data.value));}"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "As rotas preservam o contrato de coleção, mas a persistência usa as tabelas próprias. GET antes de PUT; a revisão protege alterações concorrentes."
+    },
+    {
+      "name": "18 — Conta, painel, universo e backup",
+      "item": [
+        {
+          "name": "Consultar perfil",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/profile",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar preferências e revisão",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/profile/settings",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar painel",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/dashboard",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar universo do livro",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/universe/stories/{{storyId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"storyId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Exportar backup",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/backup",
+            "description": "GET apenas. A coleção não inclui exclusão de todos os dados nem restauração automática de backup."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar sessões",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/sessions",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "19 — Isolamento entre duas contas (sequência separada)",
+      "item": [
+        {
+          "name": "Entrar na segunda conta confirmada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{otherEmail}}\",\n  \"password\": \"{{otherPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"otherEmail\",\"otherPassword\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){const expected=[200];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  "if(pm.response.code===200){const data=pm.response.json();",
+                  "pm.environment.set(\"otheraccessToken\",data.accessToken);",
+                  "pm.environment.set(\"otherrefreshToken\",data.refreshToken);",
+                  "pm.environment.set(\"othersessionId\",data.sessionId);",
+                  "pm.environment.set(\"otheruserRole\",data.user.role);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar história da segunda conta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"[Postman] Isolamento entre contas\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{otheraccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["", ""]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){const expected=[201];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "if(pm.response.code>=200&&pm.response.code<300){const data=pm.response.json();pm.test('Identificador retornado',function(){if(typeof data.id!=='string'||!data.id)throw new Error('Resposta sem identificador');});pm.environment.set(\"otherStoryId\",data.id);}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Primeira conta não consulta livro alheio (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/universe/stories/{{otherStoryId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"otherStoryId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404',function(){const expected=[404];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Primeira conta não edita livro alheio (404)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/stories/{{otherStoryId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Edição indevida\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"otherStoryId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404',function(){const expected=[404];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Primeira conta não exclui livro alheio (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{otherStoryId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"otherStoryId\",\"accessToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404',function(){const expected=[404];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Segunda conta remove sua amostra",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/stories/{{otherStoryId}}",
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{otheraccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"otherStoryId\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Encerrar segunda sessão",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/logout",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{otherrefreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{otheraccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "for(const key of [\"otherrefreshToken\"]){if(pm.variables.get(key)===undefined||pm.variables.get(key)===null||pm.variables.get(key)===''){throw new Error('Preencha a variável '+key+' ou execute primeiro a requisição que a define.');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){const expected=[204];if(!expected.includes(pm.response.code))throw new Error('Esperado '+expected.join('/')+', recebido '+pm.response.code);});",
+                  "",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Primeiro faça login normal na conta A. Depois preencha otherEmail/otherPassword com uma conta B confirmada. A amostra criada pertence à conta B; tentativas da conta A devem falhar."
+    }
+  ],
+  "variable": [
+    {
+      "key": "chapterId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "chapterVersion",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "characterId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "collectionPayload",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "creatureId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "eventCharacterId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "eventId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "itemId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "locationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "organizationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "organizationLinkId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "otherStoryId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "otheraccessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "otherrefreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "raceId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "relationshipId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "revokedAccessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ruleId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "storyId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "targetCharacterId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
